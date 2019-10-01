@@ -1,4 +1,4 @@
-module github.com/retgits/payments-app/lambda
+module github.com/retgits/payment
 
 go 1.13
 
