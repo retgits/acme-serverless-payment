@@ -1,0 +1,62 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  ACME Serverless Shop
+  
+  SAM Template for payments
+
+Globals:
+  Function:
+    Timeout: 5
+
+Parameters:
+  InboundQueue:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: '/vcs/acmeserverless/payment/inboundqueue'
+  OutboundQueue:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: '/vcs/acmeserverless/payment/outboundqueue'
+
+Resources:
+  Payment:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      CodeUri: bin/
+      Handler: payment-serverless
+      Runtime: go1.x
+      Tracing: Active
+      Timeout: 10
+      Policies:
+        - AWSLambdaRole
+        - AWSLambdaSQSQueueExecutionRole
+        - SQSSendMessagePolicy:
+            QueueName: payment-outbound
+      FunctionName: Payment
+      Events:
+        ValidateCreditcard:
+          Type: SQS
+          Properties:
+            Queue: !Sub
+              - arn:${AWS::Partition}:sqs:${AWS::Region}:${AWS::AccountId}:${InboundQueue}
+              - { OutboundQueue: !Ref InboundQueue }
+            BatchSize: 1
+            Enabled: true
+      Environment:
+        Variables:
+          REGION: !Sub ${AWS::Region}
+          RESPONSE_QUEUE: !Sub
+            - https://sqs.us-west-2.amazonaws.com/${AWS::AccountId}/${OutboundQueue}
+            - { OutboundQueue: !Ref OutboundQueue }
+      Tags:
+        version: xxx
+        author: xxx
+        team: vcs
+        feature: acme-serverless
+        region: !Sub ${AWS::Region}
+      MemorySize: 512
+      Description: "A Lambda function to validate creditcard payments"
+
+Outputs:
+  PaymentsARN:
+    Description: "ARN for the Payment function"
+    Value: !GetAtt Payment.Arn
