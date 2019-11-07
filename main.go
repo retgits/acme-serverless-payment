@@ -17,7 +17,10 @@ import (
 	"github.com/retgits/creditcard"
 
 	uuid "github.com/satori/go.uuid"
+	wflambda "github.com/wavefronthq/wavefront-lambda-go"
 )
+
+var wfAgent = wflambda.NewWavefrontAgent(&wflambda.WavefrontConfig{})
 
 // Request is the input message that the Lambda function expects. This has tobe a JSON string payload
 // that will be unmarshalled to this struct.
@@ -49,7 +52,7 @@ func handler(request events.SQSEvent) error {
 	// Get configuration set using environment variables
 	err := envconfig.Process("", &c)
 	if err != nil {
-		log.Printf("error while starting function: %s", err.Error())
+		log.Printf("error starting function: %s", err.Error())
 		return err
 	}
 
@@ -64,7 +67,7 @@ func handler(request events.SQSEvent) error {
 	for _, record := range request.Records {
 		msg, err := UnmarshalRequest([]byte(record.Body))
 		if err != nil {
-			log.Printf("error while unmarshaling request: %s", err.Error())
+			log.Printf("error unmarshaling request: %s", err.Error())
 			break
 		}
 
@@ -84,11 +87,11 @@ func handler(request events.SQSEvent) error {
 		}
 
 		if v.ValidCVV == false {
-			log.Println("creditcard cvv number is not valid")
+			log.Println("creditcard cvv is not valid")
 		}
 
 		if v.ValidCardNumber == false {
-			log.Println("creditcard cvv number is not valid")
+			log.Println("creditcard cvv is not valid")
 		}
 
 		// Send a positive reply if all checks succeed, else send a 400
@@ -131,7 +134,7 @@ func handler(request events.SQSEvent) error {
 
 // The main method is executed by AWS Lambda and points to the handler
 func main() {
-	lambda.Start(handler)
+	lambda.Start(wfAgent.WrapHandler(handler))
 }
 
 // Marshal takes a response object and creates a JSON string out of it. It returns either the string or an error

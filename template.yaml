@@ -1,62 +1,83 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  ACME Serverless Shop
-  
-  SAM Template for payments
+  The Payment service is part of the ACME Serverless Shop. The goal of this specific service is to validate credit card payments.
 
 Globals:
   Function:
     Timeout: 5
 
 Parameters:
-  InboundQueue:
+  Version:
+    Type: String
+  User:
+    Type: String
+  Team:
+    Type: String
+  Feature:
+    Type: String
+    Default: acme-serverless
+  PaymentInboundQueue:
     Type: AWS::SSM::Parameter::Value<String>
-    Default: '/vcs/acmeserverless/payment/inboundqueue'
-  OutboundQueue:
+    Default: /dev/acmeserverless/payment/inboundqueue
+  PaymentOutboundQueue:
     Type: AWS::SSM::Parameter::Value<String>
-    Default: '/vcs/acmeserverless/payment/outboundqueue'
+    Default: /dev/acmeserverless/payment/outboundqueue
+  WavefrontURL:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /dev/acmeserverless/wavefront/url
+  WavefrontToken:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /dev/acmeserverless/wavefront/token
+  LambdaEncryptionKeyID:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: The ID of the KMS key used to decrypt environment variables.
 
 Resources:
   Payment:
-    Type: 'AWS::Serverless::Function'
+    Type: AWS::Serverless::Function
     Properties:
-      CodeUri: bin/
-      Handler: payment-serverless
+      Handler: payment
       Runtime: go1.x
-      Tracing: Active
+      CodeUri: bin/
+      FunctionName: Payment
+      Description: A Lambda function to validate creditcard payments
+      MemorySize: 256
       Timeout: 10
       Policies:
         - AWSLambdaRole
         - AWSLambdaSQSQueueExecutionRole
         - SQSSendMessagePolicy:
-            QueueName: payment-outbound
-      FunctionName: Payment
+            QueueName: !Ref PaymentOutboundQueue
+        - KMSDecryptPolicy:
+            KeyId: !Ref LambdaEncryptionKeyID
+      Environment:
+        Variables:
+          REGION: !Ref AWS::Region
+          RESPONSE_QUEUE: !Sub
+            - https://sqs.us-west-2.amazonaws.com/${AWS::AccountId}/${PaymentOutboundQueue}
+            - { PaymentOutboundQueue: !Ref PaymentOutboundQueue }
+          WAVEFRONT_ENABLED: true
+          WAVEFRONT_URL: !Ref WavefrontURL
+          WAVEFRONT_API_TOKEN: !Ref WavefrontToken
       Events:
         ValidateCreditcard:
           Type: SQS
           Properties:
             Queue: !Sub
-              - arn:${AWS::Partition}:sqs:${AWS::Region}:${AWS::AccountId}:${InboundQueue}
-              - { OutboundQueue: !Ref InboundQueue }
+              - arn:${AWS::Partition}:sqs:${AWS::Region}:${AWS::AccountId}:${PaymentInboundQueue}
+              - { PaymentInboundQueue: !Ref PaymentInboundQueue }
             BatchSize: 1
             Enabled: true
-      Environment:
-        Variables:
-          REGION: !Sub ${AWS::Region}
-          RESPONSE_QUEUE: !Sub
-            - https://sqs.us-west-2.amazonaws.com/${AWS::AccountId}/${OutboundQueue}
-            - { OutboundQueue: !Ref OutboundQueue }
       Tags:
-        version: xxx
-        author: xxx
-        team: vcs
-        feature: acme-serverless
-        region: !Sub ${AWS::Region}
-      MemorySize: 512
-      Description: "A Lambda function to validate creditcard payments"
+        version: !Ref Version
+        author: !Ref User
+        team: !Ref Team
+        feature: !Ref Feature
+        region: !Ref AWS::Region
+      VersionDescription: !Ref Version
 
 Outputs:
   PaymentsARN:
-    Description: "ARN for the Payment function"
+    Description: ARN for the Payment function
     Value: !GetAtt Payment.Arn

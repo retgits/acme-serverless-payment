@@ -1,6 +1,13 @@
 # Payment
 
-The payment app is part of the [ACME Serverless Shop](https://github.com/vmwarecloudadvocacy/acme_fitness_demo) to validate credit card payments.
+> A payment service, because nothing in life is really free...
+
+The Payment service is part of the ACME Fitness Shop. The goal of this specific service is to validate credit card payments. The validation function performs four [validations](#validations) on the card. Valid credit card numbers to test with, can be found on the [PayPal website](https://www.paypalobjects.com/en_US/vhelp/paypalmanager_help/credit_card_numbers.htm)
+
+## Prerequisites
+
+* [Go (at least Go 1.12)](https://golang.org/dl/)
+* [A Wavefront API token](https://wavefront.com/)
 
 ## Design
 
@@ -22,6 +29,26 @@ The payment app is part of the [ACME Serverless Shop](https://github.com/vmwarec
      └─────┘                                └───────┘
 ```
 
+## Installation
+
+The configuration of the app relies on AWS Systems Manager Parameter Store (SSM) to store variables:
+
+* `/<stage>/acmeserverless/payment/inboundqueue`: The name of the queue to receive messages on (*not the complete ARN*).
+* `/<stage>/acmeserverless/payment/outboundqueue`: The name of the queue to send messages to (*not the complete ARN*).
+* `/<stage>/acmeserverless/wavefront/url`: The URL of your Wavefront instance (like, `https://myinstance.wavefront.com`).
+* `/<stage>/acmeserverless/wavefront/token`: Your Wavefront API token (see the [docs](https://docs.wavefront.com/wavefront_api.html) how to create an API token).
+
+With the _`<stage>`_ variable, you can have different stack referencing different sets of API keys.
+
+To create parameters, run:
+
+```bash
+aws ssm put-parameter       \
+   --type String            \
+   --name "<token name>"    \
+   --value "<token value>"
+```
+
 ## Build and Deploy
 
 There are several `Make` targets available to help build and deploy the function
@@ -36,23 +63,7 @@ There are several `Make` targets available to help build and deploy the function
 | local  | Run SAM to test the Lambda function using Docker  |
 | test   | Run all unit tests and print coverage             |
 
-_As SAM doesn't yet allow you to create SQS topics, you'll have to create them yourself._
-
-The app relies on AWS Systems Manager Parameter Store (SSM) to store variables. The variables it relies on are:
-
-* `/vcs/acmeserverless/payment/inboundqueue`: The name of the queue to receive messages on
-* `/vcs/acmeserverless/payment/outboundqueue`: The name of the queue to send messages to
-
-To create the parameters, run:
-
-```bash
-aws ssm put-parameter       \
-   --type String            \
-   --name "<token name>"    \
-   --value "<token value>"
-```
-
-## Messages
+## API
 
 ### Input
 
@@ -109,3 +120,13 @@ The validation function performs four validations on the card:
 4. Determines if a CVV is valid for a given credit card type. For example, American Express requires a four digit CVV, while Visa and Mastercard require a three digit CVV.
 
 Valid credit card numbers to test with, can be found on the [PayPal website](https://www.paypalobjects.com/en_US/vhelp/paypalmanager_help/credit_card_numbers.htm)
+
+## Contributing
+
+[Pull requests](https://github.com/retgits/payment/pulls) are welcome. For major changes, please open an [issue first](https://github.com/retgits/payment/issues) to discuss what you would like to change.
+
+Please make sure to update tests as appropriate.
+
+## License
+
+See the [LICENSE](./LICENSE) file in the repository

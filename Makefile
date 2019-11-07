@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # Description: Makefile
 # Author(s): retgits <https://github.com/retgits/>
-# Last updated: 2019-10-01
+# Last updated: 2019-11-07
 # 
 # This software may be modified and distributed under the terms of the
 # MIT license. See the LICENSE file for details.
@@ -61,24 +61,24 @@ clean: ## Remove all generated files
 	echo
 	-rm -rf bin
 	-rm packaged.yaml
-	-rm temp-template.yaml
 	echo
 
 local: ## Run SAM to test the Lambda function using Docker
 	echo
-	sam local invoke Payment -e ./events/event.json
+	sam local invoke Payment -e ./test/event.json
 	echo
 
-preparetemplate:
-	rm -f temp-template.yaml
-	cp template.yaml temp-template.yaml
-	sed -i 's/version: xxx/version: $(version)/g' temp-template.yaml
-	sed -i 's/author: xxx/author: $(github_user)/g' temp-template.yaml
-
-deploy: clean build preparetemplate ## Deploy the app to AWS Lambda
+deploy: clean build ## Deploy the app to AWS Lambda
 	echo
-	sam package --template-file temp-template.yaml --output-template-file packaged.yaml --s3-bucket $(aws_bucket)
-	sam deploy --template-file packaged.yaml --stack-name $(project_name)-$(stage) --capabilities CAPABILITY_IAM
+	sam package --template-file template.yaml --output-template-file packaged.yaml --s3-bucket $(aws_bucket)
+	aws cloudformation deploy \
+		--template-file packaged.yaml \
+		--stack-name $(project_name)-$(stage) \
+		--capabilities CAPABILITY_IAM \
+		--parameter-overrides Version=$(version) \
+		User=$(github_user) \
+		Team=vcs \
+		LambdaEncryptionKeyID=/$(stage)/global/kmskey
 	aws cloudformation describe-stacks --stack-name $(project_name)-$(stage) --query 'Stacks[].Outputs'
 	echo
 
