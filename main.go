@@ -1,6 +1,3 @@
-// Package main is the main entry point for the for the payment app of the
-// [ACME Serverless Shop](https://github.com/vmwarecloudadvocacy/acme_fitness_demo)
-// to validate credit card payments.
 package main
 
 import (
