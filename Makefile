@@ -77,8 +77,7 @@ deploy: clean build ## Deploy the app to AWS Lambda
 		--capabilities CAPABILITY_IAM \
 		--parameter-overrides Version=$(version) \
 		User=$(github_user) \
-		Team=vcs \
-		LambdaEncryptionKeyID=/$(stage)/global/kmskey
+		Team=vcs
 	aws cloudformation describe-stacks --stack-name $(project_name)-$(stage) --query 'Stacks[].Outputs'
 	echo
 
