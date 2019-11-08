@@ -91,6 +91,9 @@ func handler(request events.SQSEvent) error {
 			log.Println("creditcard cvv is not valid")
 		}
 
+		log.Printf("%+v", v.Errors)
+		log.Printf("%+v", v.Card)
+
 		// Send a positive reply if all checks succeed, else send a 400
 		var res Response
 		if v.ValidCardNumber == true && v.ValidCVV == true && v.IsExpired == false {

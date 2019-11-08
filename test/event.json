@@ -3,7 +3,7 @@
     {
       "messageId": "19dd0b57-b21e-4ac1-bd88-01bbb068cb78",
       "receiptHandle": "MessageReceiptHandle",
-      "body": "{ \"orderID\": \"12345\", \"card\": { \"number\": \"378282246310005\", \"expYear\": \"2020\", \"expMonth\": \"01\", \"ccv\": \"1234\" }, \"total\": \"123\" }",
+      "body": "{ \"orderID\": \"12345\", \"card\": { \"Type\":\"Visa\",\"Number\": \"4222222222222\", \"ExpiryYear\": 2022, \"ExpiryMonth\": 12, \"CVV\": \"123\" }, \"total\": \"123\" }",
       "attributes": {
         "ApproximateReceiveCount": "1",
         "SentTimestamp": "1523232000000",
