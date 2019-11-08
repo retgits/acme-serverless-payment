@@ -16,24 +16,84 @@ Parameters:
     Type: String
   Feature:
     Type: String
-    Default: acme-serverless
-  PaymentInboundQueue:
-    Type: AWS::SSM::Parameter::Value<String>
-    Default: /dev/acmeserverless/payment/inboundqueue
-  PaymentOutboundQueue:
-    Type: AWS::SSM::Parameter::Value<String>
-    Default: /dev/acmeserverless/payment/outboundqueue
+    Default: acmeserverless
+  Stage:
+    Type: String
+    Default: dev
   WavefrontURL:
     Type: AWS::SSM::Parameter::Value<String>
     Default: /dev/acmeserverless/wavefront/url
   WavefrontToken:
     Type: AWS::SSM::Parameter::Value<String>
     Default: /dev/acmeserverless/wavefront/token
-  LambdaEncryptionKeyID:
-    Type: AWS::SSM::Parameter::Value<String>
-    Description: The ID of the KMS key used to decrypt environment variables.
+  PaymentInboundQueue:
+    Type: String
+    Default: payment-inboundqueue
+  PaymentOutboundQueue:
+    Type: String
+    Default: payment-outboundqueue
 
 Resources:
+  PIQueueParam:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: !Sub '/${Stage}/${Feature}/payment/${PaymentInboundQueue}'
+      Type: "String"
+      Value: !Ref PaymentInboundQueue
+      Description: "The name of the inbound queue for the Payment service."
+      Tags: 
+        "version": !Ref Version
+        "author": !Ref User
+        "team": !Ref Team
+        "feature": !Ref Feature
+        "region": !Ref AWS::Region
+  POQueueParam:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: !Sub '/${Stage}/${Feature}/payment/${PaymentOutboundQueue}'
+      Type: "String"
+      Value: !Ref PaymentOutboundQueue
+      Description: "The name of the outbound queue for the Payment service."
+      Tags: 
+        "version": !Ref Version
+        "author": !Ref User
+        "team": !Ref Team
+        "feature": !Ref Feature
+        "region": !Ref AWS::Region
+  PIQueue:
+    Type: AWS::SQS::Queue
+    Properties: 
+      MessageRetentionPeriod: 120
+      QueueName: !Ref PaymentInboundQueue
+      Tags: 
+        - Key: version
+          Value: !Ref Version
+        - Key: author
+          Value: !Ref User
+        - Key: team
+          Value: !Ref Team
+        - Key: feature
+          Value: !Ref Feature
+        - Key: region
+          Value: !Ref AWS::Region
+      VisibilityTimeout: 30
+  POQueue:
+    Type: AWS::SQS::Queue
+    Properties: 
+      MessageRetentionPeriod: 120
+      QueueName: !Ref PaymentOutboundQueue
+      Tags: 
+        - Key: version
+          Value: !Ref Version
+        - Key: author
+          Value: !Ref User
+        - Key: team
+          Value: !Ref Team
+        - Key: feature
+          Value: !Ref Feature
+        - Key: region
+          Value: !Ref AWS::Region
+      VisibilityTimeout: 30
   Payment:
     Type: AWS::Serverless::Function
     Properties:
@@ -49,14 +109,10 @@ Resources:
         - AWSLambdaSQSQueueExecutionRole
         - SQSSendMessagePolicy:
             QueueName: !Ref PaymentOutboundQueue
-        - KMSDecryptPolicy:
-            KeyId: !Ref LambdaEncryptionKeyID
       Environment:
         Variables:
           REGION: !Ref AWS::Region
-          RESPONSE_QUEUE: !Sub
-            - https://sqs.us-west-2.amazonaws.com/${AWS::AccountId}/${PaymentOutboundQueue}
-            - { PaymentOutboundQueue: !Ref PaymentOutboundQueue }
+          RESPONSE_QUEUE: !Ref POQueue
           WAVEFRONT_ENABLED: true
           WAVEFRONT_URL: !Ref WavefrontURL
           WAVEFRONT_API_TOKEN: !Ref WavefrontToken
@@ -64,9 +120,7 @@ Resources:
         ValidateCreditcard:
           Type: SQS
           Properties:
-            Queue: !Sub
-              - arn:${AWS::Partition}:sqs:${AWS::Region}:${AWS::AccountId}:${PaymentInboundQueue}
-              - { PaymentInboundQueue: !Ref PaymentInboundQueue }
+            Queue: !GetAtt PIQueue.Arn
             BatchSize: 1
             Enabled: true
       Tags:
@@ -81,3 +135,9 @@ Outputs:
   PaymentsARN:
     Description: ARN for the Payment function
     Value: !GetAtt Payment.Arn
+  POQueueARN:
+    Description: ARN for the Payment Outbound Queue
+    Value: !GetAtt POQueue.Arn
+  PIQueueARN:
+    Description: ARN for the Payment Inbound Queue
+    Value: !GetAtt PIQueue.Arn
