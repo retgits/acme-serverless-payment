@@ -65,6 +65,9 @@ Resources:
     Properties: 
       MessageRetentionPeriod: 120
       QueueName: !Ref PaymentInboundQueue
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt PDLQueue.Arn
+        maxReceiveCount: 1
       Tags: 
         - Key: version
           Value: !Ref Version
@@ -82,6 +85,26 @@ Resources:
     Properties: 
       MessageRetentionPeriod: 120
       QueueName: !Ref PaymentOutboundQueue
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt PDLQueue.Arn
+        maxReceiveCount: 1
+      Tags: 
+        - Key: version
+          Value: !Ref Version
+        - Key: author
+          Value: !Ref User
+        - Key: team
+          Value: !Ref Team
+        - Key: feature
+          Value: !Ref Feature
+        - Key: region
+          Value: !Ref AWS::Region
+      VisibilityTimeout: 30
+  PDLQueue:
+    Type: AWS::SQS::Queue
+    Properties: 
+      MessageRetentionPeriod: 120
+      QueueName: payment-dlq
       Tags: 
         - Key: version
           Value: !Ref Version
