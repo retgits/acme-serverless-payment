@@ -13,7 +13,7 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/retgits/creditcard"
 
-	uuid "github.com/satori/go.uuid"
+	uuid "github.com/gofrs/uuid"
 	wflambda "github.com/wavefronthq/wavefront-lambda-go"
 )
 
@@ -101,7 +101,7 @@ func handler(request events.SQSEvent) error {
 				Message:       "transaction successful",
 				Amount:        msg.Total,
 				OrderID:       msg.OrderID,
-				TransactionID: uuid.NewV4().String(),
+				TransactionID: uuid.Must(uuid.NewV4()).String(),
 			}
 		} else {
 			res = Response{
