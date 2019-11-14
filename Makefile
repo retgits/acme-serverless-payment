@@ -73,7 +73,7 @@ local: ## Run SAM to test the Lambda function using Docker
 
 deploy: clean build ## Deploy the app to AWS Lambda
 	echo
-	sam package --template-file template.yaml --output-template-file packaged.yaml --s3-bucket $(aws_bucket)
+	aws cloudformation package --template-file template.yaml --output-template-file packaged.yaml --s3-bucket $(aws_bucket)
 	aws cloudformation deploy \
 		--template-file packaged.yaml \
 		--stack-name $(project_name)-$(stage) \
