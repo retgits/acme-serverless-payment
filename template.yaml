@@ -30,9 +30,9 @@ Resources:
     Type: AWS::SQS::Queue
     Properties: 
       MessageRetentionPeriod: 120
-      QueueName: !Sub '/${Stage}/${Feature}/payment/inbound'
+      QueueName: !Sub '${Stage}-${Feature}-payment-inbound'
       RedrivePolicy:
-        deadLetterTargetArn: !GetAtt PDLQueue.Arn
+        deadLetterTargetArn: !GetAtt PaymentInboundDeadLetterQueue.Arn
         maxReceiveCount: 1
       Tags: 
         - Key: version
@@ -50,9 +50,9 @@ Resources:
     Type: AWS::SQS::Queue
     Properties: 
       MessageRetentionPeriod: 120
-      QueueName: !Sub '/${Stage}/${Feature}/payment/outbound'
+      QueueName: !Sub '${Stage}-${Feature}-payment-outbound'
       RedrivePolicy:
-        deadLetterTargetArn: !GetAtt PDLQueue.Arn
+        deadLetterTargetArn: !GetAtt PaymentOutboundDeadLetterQueue.Arn
         maxReceiveCount: 1
       Tags: 
         - Key: version
@@ -70,7 +70,7 @@ Resources:
     Type: AWS::SQS::Queue
     Properties: 
       MessageRetentionPeriod: 120
-      QueueName: !Sub '/${Stage}/${Feature}/payment/inbound-dlq'
+      QueueName: !Sub '${Stage}-${Feature}-payment-inbound-dlq'
       Tags: 
         - Key: version
           Value: !Ref Version
@@ -87,7 +87,7 @@ Resources:
     Type: AWS::SQS::Queue
     Properties: 
       MessageRetentionPeriod: 120
-      QueueName: !Sub '/${Stage}/${Feature}/payment/outbound-dlq'
+      QueueName: !Sub '${Stage}-${Feature}-payment-outbound-dlq'
       Tags: 
         - Key: version
           Value: !Ref Version
@@ -114,7 +114,7 @@ Resources:
         - AWSLambdaRole
         - AWSLambdaSQSQueueExecutionRole
         - SQSSendMessagePolicy:
-            QueueName: !Ref PaymentOutboundQueue
+            QueueName: !Sub '${Stage}-${Feature}-payment-outbound'
       Environment:
         Variables:
           REGION: !Ref AWS::Region
