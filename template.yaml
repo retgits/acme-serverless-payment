@@ -21,50 +21,16 @@ Parameters:
     Type: String
     Default: dev
   WavefrontURL:
-    Type: AWS::SSM::Parameter::Value<String>
-    Default: /dev/acmeserverless/wavefront/url
+    Type: String
   WavefrontToken:
-    Type: AWS::SSM::Parameter::Value<String>
-    Default: /dev/acmeserverless/wavefront/token
-  PaymentInboundQueue:
     Type: String
-    Default: payment-inboundqueue
-  PaymentOutboundQueue:
-    Type: String
-    Default: payment-outboundqueue
 
 Resources:
-  PIQueueParam:
-    Type: "AWS::SSM::Parameter"
-    Properties:
-      Name: !Sub '/${Stage}/${Feature}/payment/${PaymentInboundQueue}'
-      Type: "String"
-      Value: !Ref PaymentInboundQueue
-      Description: "The name of the inbound queue for the Payment service."
-      Tags: 
-        "version": !Ref Version
-        "author": !Ref User
-        "team": !Ref Team
-        "feature": !Ref Feature
-        "region": !Ref AWS::Region
-  POQueueParam:
-    Type: "AWS::SSM::Parameter"
-    Properties:
-      Name: !Sub '/${Stage}/${Feature}/payment/${PaymentOutboundQueue}'
-      Type: "String"
-      Value: !Ref PaymentOutboundQueue
-      Description: "The name of the outbound queue for the Payment service."
-      Tags: 
-        "version": !Ref Version
-        "author": !Ref User
-        "team": !Ref Team
-        "feature": !Ref Feature
-        "region": !Ref AWS::Region
-  PIQueue:
+  PaymentInboundQueue:
     Type: AWS::SQS::Queue
     Properties: 
       MessageRetentionPeriod: 120
-      QueueName: !Ref PaymentInboundQueue
+      QueueName: !Sub '/${Stage}/${Feature}/payment/inbound'
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt PDLQueue.Arn
         maxReceiveCount: 1
@@ -80,11 +46,11 @@ Resources:
         - Key: region
           Value: !Ref AWS::Region
       VisibilityTimeout: 30
-  POQueue:
+  PaymentOutboundQueue:
     Type: AWS::SQS::Queue
     Properties: 
       MessageRetentionPeriod: 120
-      QueueName: !Ref PaymentOutboundQueue
+      QueueName: !Sub '/${Stage}/${Feature}/payment/outbound'
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt PDLQueue.Arn
         maxReceiveCount: 1
@@ -100,11 +66,28 @@ Resources:
         - Key: region
           Value: !Ref AWS::Region
       VisibilityTimeout: 30
-  PDLQueue:
+  PaymentInboundDeadLetterQueue:
     Type: AWS::SQS::Queue
     Properties: 
       MessageRetentionPeriod: 120
-      QueueName: payment-dlq
+      QueueName: !Sub '/${Stage}/${Feature}/payment/inbound-dlq'
+      Tags: 
+        - Key: version
+          Value: !Ref Version
+        - Key: author
+          Value: !Ref User
+        - Key: team
+          Value: !Ref Team
+        - Key: feature
+          Value: !Ref Feature
+        - Key: region
+          Value: !Ref AWS::Region
+      VisibilityTimeout: 30
+  PaymentOutboundDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties: 
+      MessageRetentionPeriod: 120
+      QueueName: !Sub '/${Stage}/${Feature}/payment/outbound-dlq'
       Tags: 
         - Key: version
           Value: !Ref Version
@@ -135,7 +118,7 @@ Resources:
       Environment:
         Variables:
           REGION: !Ref AWS::Region
-          RESPONSE_QUEUE: !Ref POQueue
+          RESPONSE_QUEUE: !Ref PaymentOutboundQueue
           WAVEFRONT_ENABLED: true
           WAVEFRONT_URL: !Ref WavefrontURL
           WAVEFRONT_API_TOKEN: !Ref WavefrontToken
@@ -143,7 +126,7 @@ Resources:
         ValidateCreditcard:
           Type: SQS
           Properties:
-            Queue: !GetAtt PIQueue.Arn
+            Queue: !GetAtt PaymentInboundQueue.Arn
             BatchSize: 1
             Enabled: true
       Tags:
@@ -158,9 +141,15 @@ Outputs:
   PaymentsARN:
     Description: ARN for the Payment function
     Value: !GetAtt Payment.Arn
-  POQueueARN:
-    Description: ARN for the Payment Outbound Queue
-    Value: !GetAtt POQueue.Arn
-  PIQueueARN:
+  PaymentInboundQueueARN:
     Description: ARN for the Payment Inbound Queue
-    Value: !GetAtt PIQueue.Arn
+    Value: !GetAtt PaymentInboundQueue.Arn
+  PaymentOutboundQueueARN:
+    Description: ARN for the Payment Outbound Queue
+    Value: !GetAtt PaymentOutboundQueue.Arn
+  PaymentInboundDeadLetterQueueARN:
+    Description: ARN for the Payment Inbound DeadLetter Queue
+    Value: !GetAtt PaymentInboundDeadLetterQueue.Arn
+  PaymentOutboundDeadLetterQueueARN:
+    Description: ARN for the Payment Outbound DeadLetter Queue
+    Value: !GetAtt PaymentOutboundDeadLetterQueue.Arn
