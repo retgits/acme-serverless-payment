@@ -5,7 +5,9 @@ env:
     GOARCH: "amd64"
     GOPROXY: "https://proxy.golang.org,direct"
 phases:
-  pre_build:
+  install:
+    runtime-versions:
+      golang: 1.13
     commands:
       - make deps 
   build:
