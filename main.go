@@ -11,7 +11,7 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/retgits/payment/processor"
 
-	wflambda "github.com/wavefronthq/wavefront-lambda-go"
+	wflambda "github.com/retgits/wavefront-lambda-go"
 )
 
 var wfAgent = wflambda.NewWavefrontAgent(&wflambda.WavefrontConfig{})
