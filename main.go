@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	"fmt"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -10,59 +10,57 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/retgits/payment/processor"
-
-	wflambda "github.com/retgits/wavefront-lambda-go"
 )
 
-var wfAgent = wflambda.NewWavefrontAgent(&wflambda.WavefrontConfig{})
+var svc *sqs.SQS
+var c config
 
 // config is the struct that is used to keep track of all environment variables
 type config struct {
-	AWSRegion     string `required:"true" split_words:"true" envconfig:"REGION"`
 	ResponseQueue string `required:"true" split_words:"true" envconfig:"RESPONSE_QUEUE"`
+	ErrorQueue    string `required:"true" split_words:"true" envconfig:"ERROR_QUEUE"`
 }
 
-var c config
-
-func handler(request events.SQSEvent) error {
-	// Get configuration set using environment variables
+func init() {
+	svc = sqs.New(session.New())
 	err := envconfig.Process("", &c)
 	if err != nil {
-		log.Printf("error starting function: %s", err.Error())
-		return err
+		panic(err)
+	}
+}
+
+func sendMessage(queue string, payload string) error {
+	sendMessageInput := &sqs.SendMessageInput{
+		QueueUrl:    aws.String(queue),
+		MessageBody: aws.String(payload),
 	}
 
-	// Create an AWS session
-	awsSession := session.Must(session.NewSession(&aws.Config{
-		Region: aws.String(c.AWSRegion),
-	}))
-
-	// Create a SQS session
-	sqsService := sqs.New(awsSession)
-
-	for _, record := range request.Records {
-		resp, err := processor.Validate(record.Body)
-		if err != nil {
-			log.Printf("error validating creditcard: %s", err.Error())
-			break
-		}
-
-		sendMessageInput := &sqs.SendMessageInput{
-			QueueUrl:    aws.String(c.ResponseQueue),
-			MessageBody: aws.String(resp),
-		}
-
-		_, err = sqsService.SendMessage(sendMessageInput)
-		if err != nil {
-			log.Printf("error while sending response message: %s", err.Error())
-			break
-		}
+	_, err := svc.SendMessage(sendMessageInput)
+	if err != nil {
+		return err
 	}
 
 	return nil
 }
 
+// handler handles the incoming SNS event, validates the PaymentRequest, and
+// returns the result using Lambda Destinations.
+func handler(request events.SQSEvent) error {
+	msg, err := processor.UnmarshalRequest([]byte(request.Records[0].Body))
+	if err != nil {
+		return sendMessage(c.ErrorQueue, fmt.Sprintf("error unmarshalling request: %s\noriginal event: %s", err.Error(), request.Records[0].Body))
+	}
+
+	pr := processor.Validate(msg)
+	payload, err := pr.Marshal()
+	if err != nil {
+		return sendMessage(c.ErrorQueue, fmt.Sprintf("error marshalling response: %s", err.Error()))
+	}
+
+	return sendMessage(c.ResponseQueue, payload)
+}
+
 // The main method is executed by AWS Lambda and points to the handler
 func main() {
-	lambda.Start(wfAgent.WrapHandler(handler))
+	lambda.Start(handler)
 }

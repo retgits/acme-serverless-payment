@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"io/ioutil"
-	"os"
 	"testing"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -21,13 +20,13 @@ func TestHandler(t *testing.T) {
 	assert.NoError(err)
 
 	err = handler(request)
-	assert.Error(err)
+	assert.NoError(err)
 
-	os.Setenv("REGION", "us-west-2")
-	os.Setenv("RESPONSE_QUEUE", "MyQueue")
-	os.Setenv("WAVEFRONT_ENABLED", "true")
-	os.Setenv("WAVEFRONT_URL", "")
-	os.Setenv("WAVEFRONT_API_TOKEN", "")
+	bytes, err = ioutil.ReadFile("./test/failure.json")
+	assert.NoError(err)
+
+	err = json.Unmarshal(bytes, &request)
+	assert.NoError(err)
 
 	err = handler(request)
 	assert.NoError(err)

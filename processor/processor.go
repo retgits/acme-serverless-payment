@@ -8,15 +8,9 @@ import (
 )
 
 // Validate performs the actual validation of the creditcard
-func Validate(message string) (string, error) {
-	msg, err := unmarshalRequest([]byte(message))
-	if err != nil {
-		log.Printf("error unmarshaling request: %s", err.Error())
-		return "", err
-	}
-
+func Validate(pr PaymentRequest) PaymentResponse {
 	// Validate the card and log the response
-	v := msg.Card.Validate()
+	v := pr.Card.Validate()
 
 	if v.IsExpired == true {
 		log.Println("creditcard has expired")
@@ -39,34 +33,24 @@ func Validate(message string) (string, error) {
 	}
 
 	// Print all errors
-	log.Printf("All processing errors: %+v", v.Errors)
-
-	// Send a positive reply if all checks succeed, else send a 400
-	var res Response
-	if v.ValidCardNumber == true && v.ValidCVV == true && v.IsExpired == false {
-		log.Println("payment processed successfully")
-		res = Response{
-			Success:       true,
-			Status:        http.StatusOK,
-			Message:       "transaction successful",
-			Amount:        msg.Total,
-			OrderID:       msg.OrderID,
-			TransactionID: uuid.Must(uuid.NewV4()).String(),
-		}
-	} else {
-		res = Response{
+	if len(v.Errors) > 0 {
+		log.Printf("Processing of payment failed due to: %+v", v.Errors)
+		return PaymentResponse{
 			Success:       false,
 			Status:        http.StatusBadRequest,
 			Message:       "creditcard validation has failed, unable to process payment",
-			OrderID:       msg.OrderID,
+			OrderID:       pr.OrderID,
 			TransactionID: "-1",
 		}
 	}
-	resp, err := res.marshal()
-	if err != nil {
-		log.Printf("error marshaling response: %s", err.Error())
-		return "", err
-	}
 
-	return resp, nil
+	log.Println("payment processed successfully")
+	return PaymentResponse{
+		Success:       true,
+		Status:        http.StatusOK,
+		Message:       "transaction successful",
+		Amount:        pr.Total,
+		OrderID:       pr.OrderID,
+		TransactionID: uuid.Must(uuid.NewV4()).String(),
+	}
 }

@@ -29,6 +29,10 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/retgits/creditcard v0.3.0 h1:Vy0kA1szLZJ2SDiv9b5raSfXGn+bp2Rf2le72rUCALU=
 github.com/retgits/creditcard v0.3.0/go.mod h1:ljNdnrAVOGfDT9zMmxibAR4p1mlTr6Y7PzseJXI4PZA=
+github.com/retgits/creditcard v0.4.0 h1:4T2NiyMk1v5+mzAUqJxBrXtoik9Jn0YVFFe3oxzD1M4=
+github.com/retgits/creditcard v0.4.0/go.mod h1:ljNdnrAVOGfDT9zMmxibAR4p1mlTr6Y7PzseJXI4PZA=
+github.com/retgits/creditcard v0.5.0 h1:zj0qqIovA8rP8ejKsWYCN0EvD4fucJE98GH4VApqO3Y=
+github.com/retgits/creditcard v0.5.0/go.mod h1:ljNdnrAVOGfDT9zMmxibAR4p1mlTr6Y7PzseJXI4PZA=
 github.com/retgits/wavefront-lambda-go v0.1.1-0.20191125162950-829ba5810925 h1:cm665oNuo/i2QidE+MUQlc9smSy2Njj9MIJCOzOtTJU=
 github.com/retgits/wavefront-lambda-go v0.1.1-0.20191125162950-829ba5810925/go.mod h1:w9b8nE4I+EwcHE6MQpuvr14CwOf+MdpKgqerTMNiyhk=
 github.com/russross/blackfriday/v2 v2.0.1/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=

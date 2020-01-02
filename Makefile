@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # Description: Makefile
 # Author(s): retgits <https://github.com/retgits/>
-# Last updated: 2019-11-14
+# Last updated: 2020-01-02
 # 
 # This software may be modified and distributed under the terms of the
 # MIT license. See the LICENSE file for details.
@@ -25,18 +25,12 @@ version       	:= $(strip $(if $(shell git describe --tags --always --dirty="-de
 ## The Amazon S3 bucket to upload files to
 aws_bucket    	?= $$S3_BUCKET
 
-## The URL of Wavefront the Wavefront instance
-wavefront_url   ?= $$WAVEFRONTURL
-
-## The Token of Wavefront the Wavefront instance
-wavefront_token	?= $$WAVEFRONTTOKEN
-
 # Suppress checking files and all Make output
 .PHONY: help deps test build clean local deploy destroy
 .SILENT: help deps test build clean local deploy destroy
 
 # Targets
-help: ## Displays the help for each target (this message).
+help: ## Displays the help for each target (this message)
 	echo
 	echo Usage: make [TARGET]
 	echo
@@ -53,7 +47,6 @@ deps: ## Get the Go modules from the GOPROXY
 test: ## Run all unit tests and print coverage
 	echo
 	go test -cover ./...
-	snyk test
 	echo
 
 build: ## Build the executable for Lambda
@@ -80,10 +73,9 @@ deploy: clean build ## Deploy the app to AWS Lambda
 		--stack-name $(project_name)-$(stage) \
 		--capabilities CAPABILITY_IAM \
 		--parameter-overrides Version=$(version) \
-		User=$(github_user) \
+		Author=$(github_user) \
 		Team=$(team) \
-		WavefrontURL=$(wavefront_url) \
-		WavefrontToken=$(wavefront_token)
+		Version=$(version)
 	aws cloudformation describe-stacks --stack-name $(project_name)-$(stage) --query 'Stacks[].Outputs'
 	echo
 

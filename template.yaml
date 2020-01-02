@@ -3,14 +3,10 @@ Transform: AWS::Serverless-2016-10-31
 Description: >
   The Payment service is part of the ACME Serverless Shop. The goal of this specific service is to validate credit card payments.
 
-Globals:
-  Function:
-    Timeout: 5
-
 Parameters:
   Version:
     Type: String
-  User:
+  Author:
     Type: String
   Team:
     Type: String
@@ -20,25 +16,21 @@ Parameters:
   Stage:
     Type: String
     Default: dev
-  WavefrontURL:
-    Type: String
-  WavefrontToken:
-    Type: String
 
 Resources:
-  PaymentInboundQueue:
+  PaymentRequestQueue:
     Type: AWS::SQS::Queue
     Properties: 
       MessageRetentionPeriod: 120
-      QueueName: !Sub '${Stage}-${Feature}-payment-inbound'
+      QueueName: !Sub '${Stage}-${Feature}-payment-request'
       RedrivePolicy:
-        deadLetterTargetArn: !GetAtt PaymentInboundDeadLetterQueue.Arn
+        deadLetterTargetArn: !GetAtt PaymentErrorQueue.Arn
         maxReceiveCount: 1
       Tags: 
         - Key: version
           Value: !Ref Version
         - Key: author
-          Value: !Ref User
+          Value: !Ref Author
         - Key: team
           Value: !Ref Team
         - Key: feature
@@ -46,19 +38,19 @@ Resources:
         - Key: region
           Value: !Ref AWS::Region
       VisibilityTimeout: 30
-  PaymentOutboundQueue:
+  PaymentResponseQueue:
     Type: AWS::SQS::Queue
     Properties: 
       MessageRetentionPeriod: 120
-      QueueName: !Sub '${Stage}-${Feature}-payment-outbound'
+      QueueName: !Sub '${Stage}-${Feature}-payment-response'
       RedrivePolicy:
-        deadLetterTargetArn: !GetAtt PaymentOutboundDeadLetterQueue.Arn
+        deadLetterTargetArn: !GetAtt PaymentErrorQueue.Arn
         maxReceiveCount: 1
       Tags: 
         - Key: version
           Value: !Ref Version
         - Key: author
-          Value: !Ref User
+          Value: !Ref Author
         - Key: team
           Value: !Ref Team
         - Key: feature
@@ -66,33 +58,16 @@ Resources:
         - Key: region
           Value: !Ref AWS::Region
       VisibilityTimeout: 30
-  PaymentInboundDeadLetterQueue:
+  PaymentErrorQueue:
     Type: AWS::SQS::Queue
     Properties: 
       MessageRetentionPeriod: 120
-      QueueName: !Sub '${Stage}-${Feature}-payment-inbound-dlq'
+      QueueName: !Sub '${Stage}-${Feature}-payment-error'
       Tags: 
         - Key: version
           Value: !Ref Version
         - Key: author
-          Value: !Ref User
-        - Key: team
-          Value: !Ref Team
-        - Key: feature
-          Value: !Ref Feature
-        - Key: region
-          Value: !Ref AWS::Region
-      VisibilityTimeout: 30
-  PaymentOutboundDeadLetterQueue:
-    Type: AWS::SQS::Queue
-    Properties: 
-      MessageRetentionPeriod: 120
-      QueueName: !Sub '${Stage}-${Feature}-payment-outbound-dlq'
-      Tags: 
-        - Key: version
-          Value: !Ref Version
-        - Key: author
-          Value: !Ref User
+          Value: !Ref Author
         - Key: team
           Value: !Ref Team
         - Key: feature
@@ -112,44 +87,45 @@ Resources:
       Timeout: 10
       Policies:
         - AWSLambdaRole
-        - AWSLambdaSQSQueueExecutionRole
         - SQSSendMessagePolicy:
-            QueueName: !Sub '${Stage}-${Feature}-payment-outbound'
+            QueueName: !GetAtt PaymentErrorQueue.QueueName
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt PaymentResponseQueue.QueueName
       Environment:
         Variables:
-          REGION: !Ref AWS::Region
-          RESPONSE_QUEUE: !Ref PaymentOutboundQueue
-          WAVEFRONT_ENABLED: true
-          WAVEFRONT_URL: !Ref WavefrontURL
-          WAVEFRONT_API_TOKEN: !Ref WavefrontToken
+          ERROR_QUEUE: !GetAtt PaymentErrorQueue.QueueName
+          RESPONSE_QUEUE: !GetAtt PaymentResponseQueue.QueueName
       Events:
         ValidateCreditcard:
           Type: SQS
           Properties:
-            Queue: !GetAtt PaymentInboundQueue.Arn
+            Queue: !GetAtt PaymentRequestQueue.Arn
             BatchSize: 1
             Enabled: true
       Tags:
         version: !Ref Version
-        author: !Ref User
+        author: !Ref Author
         team: !Ref Team
         feature: !Ref Feature
         region: !Ref AWS::Region
       VersionDescription: !Ref Version
+  PaymentLogGroup:
+    Type: "AWS::Logs::LogGroup"
+    DependsOn: "Payment"
+    Properties: 
+      RetentionInDays: 1
+      LogGroupName: !Join ["", ["/aws/lambda/", !Ref Payment]]
 
 Outputs:
-  PaymentsARN:
+  PaymentARN:
     Description: ARN for the Payment function
     Value: !GetAtt Payment.Arn
-  PaymentInboundQueueARN:
-    Description: ARN for the Payment Inbound Queue
-    Value: !GetAtt PaymentInboundQueue.Arn
-  PaymentOutboundQueueARN:
-    Description: ARN for the Payment Outbound Queue
-    Value: !GetAtt PaymentOutboundQueue.Arn
-  PaymentInboundDeadLetterQueueARN:
-    Description: ARN for the Payment Inbound DeadLetter Queue
-    Value: !GetAtt PaymentInboundDeadLetterQueue.Arn
-  PaymentOutboundDeadLetterQueueARN:
-    Description: ARN for the Payment Outbound DeadLetter Queue
-    Value: !GetAtt PaymentOutboundDeadLetterQueue.Arn
+  PaymentRequestQueueARN:
+    Description: ARN for the Payment Request Queue
+    Value: !GetAtt PaymentRequestQueue.Arn
+  PaymentResponseQueueARN:
+    Description: ARN for the Payment Response Queue
+    Value: !GetAtt PaymentResponseQueue.Arn
+  PaymentErrorQueueARN:
+    Description: ARN for the Payment Error Queue
+    Value: !GetAtt PaymentErrorQueue.Arn

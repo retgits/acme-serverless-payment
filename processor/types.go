@@ -6,16 +6,15 @@ import (
 	"github.com/retgits/creditcard"
 )
 
-// Request is the input message that the Lambda function expects. This has to be a JSON string payload
-// that will be unmarshalled to this struct.
-type Request struct {
+// PaymentRequest is the input message that the payment function expects.
+type PaymentRequest struct {
 	OrderID string          `json:"orderID"`
 	Card    creditcard.Card `json:"card"`
 	Total   string          `json:"total"`
 }
 
-// Response is the output message that the Lambda function sends. It will be a JSON string payload.
-type Response struct {
+// PaymentResponse is the output message that the payment function sends.
+type PaymentResponse struct {
 	Success       bool   `json:"success"`
 	Status        int    `json:"status"`
 	Message       string `json:"message"`
@@ -25,7 +24,7 @@ type Response struct {
 }
 
 // Marshal takes a response object and creates a JSON string out of it. It returns either the string or an error
-func (r *Response) marshal() (string, error) {
+func (r *PaymentResponse) Marshal() (string, error) {
 	b, err := json.Marshal(r)
 	if err != nil {
 		return "", err
@@ -33,9 +32,9 @@ func (r *Response) marshal() (string, error) {
 	return string(b), nil
 }
 
-// unmarshalRequest transforms the data from the incoming message
-func unmarshalRequest(data []byte) (Request, error) {
-	var r Request
+// UnmarshalRequest transforms the data from the incoming message
+func UnmarshalRequest(data []byte) (PaymentRequest, error) {
+	var r PaymentRequest
 	err := json.Unmarshal(data, &r)
 	return r, err
 }
