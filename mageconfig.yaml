@@ -1,0 +1,6 @@
+config:
+  stage: dev
+  author: retgits
+  team: vcs
+  awsS3bucket: $$AWS_S3_BUCKET$$
+  tests: Payment/event.json
