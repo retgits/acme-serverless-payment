@@ -130,7 +130,7 @@ func (Lambda) Build() error {
 	return nil
 }
 
-// Remove all generated files.
+// Clean remove all generated files.
 func (Lambda) Clean() error {
 	err := sh.Run("rm", "-rf", "bin")
 	err = sh.Run("rm", "-rf", "packaged.yaml")

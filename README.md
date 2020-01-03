@@ -7,6 +7,7 @@ The Payment service is part of the [ACME Fitness Shop](https://github.com/vmware
 ## Prerequisites
 
 * [Go (at least Go 1.12)](https://golang.org/dl/)
+* [Mage](https://magefile.org/)
 * [An AWS Account](https://portal.aws.amazon.com/billing/signup)
 * [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html) and [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html) installed and configured
 
@@ -17,40 +18,29 @@ Provided you already have the AWS CLI and the AWS SAM CLI installed and configur
 ```bash
 git clone https://github.com/retgits/payment
 cd payment
-make deps
+mage deps
 ```
 
-Update the `Makefile` and change the variables with values that match your preferred setup:
+Update the `mageconfig.yaml` and change the variables with values that match your preferred setup. If you want to use environment variables, use the syntax `$$<variable name>$$`
 
-```make
-## The stage to deploy to
-stage         	:= dev
-
-## The name of the user in GitHub (also used as author in CloudFormation tags)
-github_user   	:= retgits
-
-## The name of the team
-team			:= vcs
-
-## The name of the project, defaults to the name of the current directory
-project_name  	:= $(notdir $(CURDIR))
-
-## The version of the project, either uses the current commit hash, or will default to "dev"
-version       	:= $(strip $(if $(shell git describe --tags --always --dirty="-dev"),$(shell git describe --tags --always --dirty="-dev"),dev))
-
-## The Amazon S3 bucket to upload files to
-aws_bucket    	?= $$S3_BUCKET
+```yaml
+stage: dev
+author: retgits
+team: vcs
+awsS3bucket: $$AWS_S3_BUCKET$$
 ```
 
 Deploy the function into your AWS account:
 
 ```
-make deploy
+mage lambda:deploy
 ```
 
 ## Test
 
 You can test the function from the [AWS Lambda Console](https://console.aws.amazon.com/lambda/home) using the test data from the files [`lambda-console-failure.json`](./test/lambda-console-failure.json) and [`lambda-console-success.json`](./test/lambda-console-success.json). Alternatively, you can publish a message to the _PaymentRequestQueue_ created during deployment using the payload from either [`event.json`](./test/event.json) or [`failure.json`](./test/failure.json).
+
+To test before deployment, the command `mage lambda:local` executes functions in a Lambda-like environment locally. The input and events can be passed in by setting the 'tests' variable in the mageconfig file with space separated entries in the form of `<Function>/<input file>` (like `Payment/event.json Payment/failure.json`).
 
 ## Events
 
@@ -100,20 +90,19 @@ When the card fails to validate, an error message is sent back. More details on 
 
 In case of any errors while processing the message, the message and the event are sent to the `PaymentErrorQueue`.
 
-## Using `Make`
+## Using `Mage`
 
-Most of the actions to build and run the app are captured in a [Makefile](./Makefile)
+Most of the actions to build and run the app are captured in a [Magefile](./mage.go)
 
-| Target  | Description                                                |
-|---------|------------------------------------------------------------|
-| build   | Build the executable for Lambda                            |
-| clean   | Remove all generated files                                 |
-| deploy  | Deploy the app to AWS Lambda                               |
-| deps    | Get the Go modules from the GOPROXY                        |
-| destroy | Deletes the CloudFormation stack and all created resources |
-| help    | Displays the help for each target (this message)           |
-| local   | Run SAM to test the Lambda function using Docker           |
-| test    | Run all unit tests and print coverage                      |
+| Target         | Description                                                                                              |
+|----------------|----------------------------------------------------------------------------------------------------------|
+| go:deps        | resolves and downloads dependencies to the current development module and then builds and installs them. |
+| go:test        | 'Go test' automates testing the packages named by the import paths.                                      |
+| lambda:build   | compiles the individual commands in the cmd folder, along with their dependencies.                       |
+| lambda:clean   | remove all generated files.                                                                              |
+| lambda:deploy  | carries out the AWS CloudFormation commands 'package, 'deploy', and 'describe-stacks'.                   |
+| lambda:destroy | deletes the created stack, described in the template.yaml file.                                          |
+| lambda:local   | executes functions in a Lambda-like environment locally.                                                 |
 
 ## Contributing
 
