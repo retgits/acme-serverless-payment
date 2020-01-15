@@ -26,8 +26,8 @@ version       	:= $(strip $(if $(shell git describe --tags --always --dirty="-de
 aws_bucket    	?= $$AWS_S3_BUCKET
 
 # Suppress checking files and all Make output
-.PHONY: help build clean deploy destroy
-.SILENT: help build clean deploy destroy
+.PHONY: help build vuln clean deploy destroy
+.SILENT: help build vuln clean deploy destroy
 
 # Targets
 help: ## Displays the help for each target (this message)
@@ -41,6 +41,11 @@ help: ## Displays the help for each target (this message)
 build: ## Build the executable for Lambda
 	echo
 	GOOS=linux GOARCH=amd64 go build -o ./bin/lambda-sqs .
+	echo
+
+vuln: ## Scans the Go.mod file for known vulnerabilities using Snyk.
+	echo
+	snyk test --file=../../go.mod
 	echo
 
 clean: ## Remove all generated files

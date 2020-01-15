@@ -1,6 +1,8 @@
 config:
   stage: dev
+  project: payment
   author: retgits
   team: vcs
-  awsS3bucket: $$AWS_S3_BUCKET$$
-  tests: Payment/event.json
+  app: lambda-eventbridge
+  aws:
+    bucket: %%AWS_S3_BUCKET%%

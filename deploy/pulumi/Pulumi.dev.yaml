@@ -1,8 +1,0 @@
-config:
-  aws:profile: default
-  aws:region: us-west-2
-  aws:bucket: $$AWS_S3_BUCKET$$
-  tags:stage: dev
-  tags:author: retgits
-  tags:team: vcs
-  mage:tests: Payment/event.json
