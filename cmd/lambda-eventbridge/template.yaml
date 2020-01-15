@@ -1,0 +1,70 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+## A text string that describes the template.
+Description: >
+  The Payment service is part of the ACME Fitness Serverless Shop. The goal of this specific service is to validate credit card payments.
+
+## Values to pass to your template at runtime (when you create or update a stack).
+Parameters:
+  Version:
+    Type: String
+  Author:
+    Type: String
+  Team:
+    Type: String
+  Feature:
+    Type: String
+    Default: acmeserverless
+  Stage:
+    Type: String
+    Default: dev
+
+## Specifies the stack resources and their properties.
+Resources:
+  Payment:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: lambda-eventbridge
+      Runtime: go1.x
+      CodeUri: bin/
+      FunctionName: Payment
+      Description: A Lambda function to validate creditcard payments
+      MemorySize: 256
+      Timeout: 10
+      Policies:
+        - AWSLambdaRole
+      Environment:
+        Variables:
+          REGION: !Ref AWS::Region
+          EVENTBUS: !Ref Feature
+      Events:
+        ValidateCreditcard:
+          Type: CloudWatchEvent
+          Properties:
+            EventBusName: !Ref Feature
+            InputPath: $.detail
+            Pattern:
+              detail:
+                metadata:
+                  type:
+                    - "PaymentRequested"
+      Tags:
+        version: !Ref Version
+        author: !Ref Author
+        team: !Ref Team
+        feature: !Ref Feature
+        region: !Ref AWS::Region
+      VersionDescription: !Ref Version
+  PaymentLogGroup:
+    Type: "AWS::Logs::LogGroup"
+    DependsOn: "Payment"
+    Properties: 
+      RetentionInDays: 1
+      LogGroupName: !Join ["", ["/aws/lambda/", !Ref Payment]]
+
+## Describes the values that are returned whenever you view your stack's properties.
+Outputs:
+  PaymentARN:
+    Description: ARN for the Payment function
+    Value: !GetAtt Payment.Arn

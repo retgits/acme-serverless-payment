@@ -2,107 +2,213 @@
 
 > A payment service, because nothing in life is really free...
 
-The Payment service is part of the [ACME Fitness Shop](https://github.com/vmwarecloudadvocacy/acme_fitness_demo). The goal of this specific service is to validate credit card payments. Currently the only validation performed is whether the card is acceptable.
+The Payment service is part of the [ACME Fitness Serverless Shop](https://github.com/vmwarecloudadvocacy/acme_fitness_demo). The goal of this specific service is to validate credit card payments. Currently the only validation performed is whether the card is acceptable.
 
 ## Prerequisites
 
 * [Go (at least Go 1.12)](https://golang.org/dl/)
-* [Mage](https://magefile.org/)
 * [An AWS Account](https://portal.aws.amazon.com/billing/signup)
-* [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html) and [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html) installed and configured
 
-## Quick start
+## Eventing Options
 
-Provided you already have the AWS CLI and the AWS SAM CLI installed and configured, you can run:
+The payment service has a few different eventing platforms available:
+
+* [Amazon EventBridge](https://aws.amazon.com/eventbridge/)
+* [Amazon Simple Queue Service](https://aws.amazon.com/sqs/)
+
+For all options there is a Lambda function ready to be deployed where events arrive from and are sent to that particular eventing mechanism. You can find the code in `./cmd/lambda-<event platform>`. There is a ready made test function available as well that sends a message to the eventing platform. The code for the tester can be found in `./cmd/test-<event platform>`. The messages the testing app sends, are located under the [`test`](./test) folder.
+
+## Using Amazon EventBridge
+
+### Prerequisites for EventBridge
+
+* [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html) installed and configured
+* [Custom EventBus](https://docs.aws.amazon.com/eventbridge/latest/userguide/create-event-bus.html) configured, the name of the configured event bus should be set as the `feature` parameter in the `template.yaml` file.
+
+### Build and deploy for EventBridge
+
+Clone this repository
 
 ```bash
 git clone https://github.com/retgits/payment
 cd payment
-mage deps
 ```
 
-Update the `mageconfig.yaml` and change the variables with values that match your preferred setup. If you want to use environment variables, use the syntax `$$<variable name>$$`
+Get the Go Module dependencies
 
-```yaml
-stage: dev
-author: retgits
-team: vcs
-awsS3bucket: $$AWS_S3_BUCKET$$
+```bash
+go get ./...
 ```
 
-Deploy the function into your AWS account:
+Switch directories to the EventBridge folder
 
+```bash
+cd ./cmd/lambda-eventbridge
 ```
-mage lambda:deploy
+
+If your event bus is not called _acmeserverless_, update the name of the `feature` parameter in the `template.yaml` file. Now you can build and deploy the Lambda function:
+
+```bash
+make build
+make deploy
 ```
 
-## Test
+### Testing EventBridge
 
-You can test the function from the [AWS Lambda Console](https://console.aws.amazon.com/lambda/home) using the test data from the files [`lambda-console-failure.json`](./test/lambda-console-failure.json) and [`lambda-console-success.json`](./test/lambda-console-success.json). Alternatively, you can publish a message to the _PaymentRequestQueue_ created during deployment using the payload from either [`event.json`](./test/event.json) or [`failure.json`](./test/failure.json).
+You can test the function from the [AWS Lambda Console](https://console.aws.amazon.com/lambda/home) using the test data from the files in [eventbridge](./test/eventbridge/). To send a message to the event bus, you can use the app in `./cmd/test-eventbridge` and run
 
-To test before deployment, the command `mage lambda:local` executes functions in a Lambda-like environment locally. The input and events can be passed in by setting the 'tests' variable in the mageconfig file with space separated entries in the form of `<Function>/<input file>` (like `Payment/event.json Payment/failure.json`).
+```bash
+go run main.go -event=<any of the files existing in test/eventbridge> -location=<location on disk of the test/eventbridge folder> -bus=<name of the custom bus>
+```
+
+
+
+### Prerequisites for SQS
+
+* [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html) installed and configured
+
+### Build and deploy for SQS
+
+Clone this repository
+
+```bash
+git clone https://github.com/retgits/payment
+cd payment
+```
+
+Get the Go Module dependencies
+
+```bash
+go get ./...
+```
+
+Switch directories to the SQS folder
+
+```bash
+cd ./cmd/lambda-sqs
+```
+
+Now you can build and deploy the Lambda function:
+
+```bash
+make build
+make deploy
+```
+
+### Testing SQS
+
+To send a message to an SQS queue using the test data from the files in [sqs](./test/sqs/), you can use the app in `./cmd/test-sqs` and run
+
+```bash
+go run main.go -event=<any of the files existing in test/sqs> -location=<location on disk of the test/sqs folder> -queue=<name of the sqs queue>
+```
+
+If you want to test from the [AWS Lambda Console](https://console.aws.amazon.com/lambda/home), you'll have to wrap the test data in a SQS record envelop:
+
+```json
+{
+  "Records": [
+    {
+      "messageId": "19dd0b57-b21e-4ac1-bd88-01bbb068cb78",
+      "receiptHandle": "MessageReceiptHandle",
+      "body": "", // This is where the data, an escaped JSON string, should be pasted
+      "attributes": {
+        "ApproximateReceiveCount": "1",
+        "SentTimestamp": "1523232000000",
+        "SenderId": "123456789012",
+        "ApproximateFirstReceiveTimestamp": "1523232000001"
+      },
+      "messageAttributes": {},
+      "md5OfBody": "7b270e59b47ff90a553787216d55d91d",
+      "eventSource": "aws:sqs",
+      "eventSourceARN": "arn:aws:sqs:us-east-1:123456789012:MyQueue",
+      "awsRegion": "us-east-1"
+    }
+  ]
+}
+```
 
 ## Events
 
-![payment](./payment.png)
-
-The function accepts events from SQS on the `PaymentRequestQueue`. These events should contain a payment request, like:
+The events for all of ACME Serverless Fitness Shop are structured as
 
 ```json
 {
-    "orderID": "12345",
-    "card": {
-        "Type": "Visa",
-        "Number": "4222222222222",
-        "ExpiryYear": 2016,
-        "ExpiryMonth": 12,
-        "CVV": "123"
+    "metadata": { // Metadata for all services
+        "domain": "Order", // Domain represents the the event came from (like Payment or Order)
+        "source": "CLI", // Source represents the function the event came from (like ValidateCreditCard or SubmitOrder)
+        "type": "PaymentRequested", // Type respresents the type of event this is (like CreditCardValidated)
+        "status": "success" // Status represents the current status of the event (like Success)
     },
-    "total": "123"
+    "data": {} // The actual payload of the event
 }
 ```
 
-Credit card numbers to test with cab be found on the [PayPal](http://www.paypalobjects.com/en_US/vhelp/paypalmanager_help/credit_card_numbers.htm) website.
-
-Whether the validation succeeds or fails, a response is sent to the `PaymentResponseQueue`, with the payload looking like:
+The input that the function expects, either as the direct message or after transforming the JSON is
 
 ```json
 {
-  "success": "true",
-  "status": "200",
-  "message": "transaction successful",
-  "amount": 123,
-  "transactionID": "3f846704-af12-4ea9-a98c-8d7b37e10b54"
+    "metadata": {
+        "domain": "Order",
+        "source": "CLI",
+        "type": "PaymentRequested", // When using EventBridge, the deployment creates a rule that triggers the function for events where the type is set to PaymentRequested
+        "status": "success"
+    },
+    "data": {
+        "orderID": "12345",
+        "card": {
+            "Type": "Visa",
+            "Number": "4222222222222",
+            "ExpiryYear": 2022,
+            "ExpiryMonth": 12,
+            "CVV": "123"
+        },
+        "total": "123"
+    }
 }
 ```
 
-When the card fails to validate, an error message is sent back. More details on why validation has failed is available in the logs:
+Credit card numbers to test with can be found on the [PayPal](http://www.paypalobjects.com/en_US/vhelp/paypalmanager_help/credit_card_numbers.htm) website.
+
+A successful validation results in the below event being sent
 
 ```json
 {
-  "success": "false",
-  "status": "400",
-  "message": "creditcard validation has failed, unable to process payment",
-  "amount": "0",
-  "transactionID": "-1"
+    "metadata": {
+        "domain": "Payment",
+        "source": "ValidateCreditCard",
+        "type": "CreditCardValidated",
+        "status": "success"
+    },
+    "data": {
+        "success": "true",
+        "status": 200,
+        "message": "transaction successful",
+        "amount": 123,
+        "transactionID": "3f846704-af12-4ea9-a98c-8d7b37e10b54"
+    }
 }
 ```
 
-In case of any errors while processing the message, the message and the event are sent to the `PaymentErrorQueue`.
+When the card fails to validate, an error event is sent. More details on why validation has failed is available in the logs:
 
-## Using `Mage`
-
-Most of the actions to build and run the app are captured in a [Magefile](./mage.go)
-
-| Target         | Description                                                                                              |
-|----------------|----------------------------------------------------------------------------------------------------------|
-| go:deps        | resolves and downloads dependencies to the current development module and then builds and installs them. |
-| go:test        | 'Go test' automates testing the packages named by the import paths.                                      |
-| lambda:build   | compiles the individual commands in the cmd folder, along with their dependencies.                       |
-| lambda:clean   | remove all generated files.                                                                              |
-| lambda:deploy  | carries out the AWS CloudFormation commands 'package, 'deploy', and 'describe-stacks'.                   |
-| lambda:destroy | deletes the created stack, described in the template.yaml file.                                          |
-| lambda:local   | executes functions in a Lambda-like environment locally.                                                 |
+```json
+{
+    "metadata": {
+        "domain": "Payment",
+        "source": "ValidateCreditCard",
+        "type": "CreditCardValidated",
+        "status": "error"
+    },
+    "data": {
+        "success": "false",
+        "status": 400,
+        "message": "creditcard validation has failed, unable to process payment",
+        "amount": "0",
+        "transactionID": "-1"
+    }
+}
+```
 
 ## Contributing
 

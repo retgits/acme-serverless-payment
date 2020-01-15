@@ -42,7 +42,7 @@ Temporary Items
 vendor/
 
 # Bin directory
-bin/
+*bin/
 
 # AWS Lambda
 packaged.yaml

@@ -1,8 +1,11 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: >
-  The Payment service is part of the ACME Serverless Shop. The goal of this specific service is to validate credit card payments.
 
+## A text string that describes the template.
+Description: >
+  The Payment service is part of the ACME Fitness Serverless Shop. The goal of this specific service is to validate credit card payments.
+
+## Values to pass to your template at runtime (when you create or update a stack).
 Parameters:
   Version:
     Type: String
@@ -17,6 +20,7 @@ Parameters:
     Type: String
     Default: dev
 
+## Specifies the stack resources and their properties.
 Resources:
   PaymentRequestQueue:
     Type: AWS::SQS::Queue
@@ -88,13 +92,11 @@ Resources:
       Policies:
         - AWSLambdaRole
         - SQSSendMessagePolicy:
-            QueueName: !GetAtt PaymentErrorQueue.QueueName
-        - SQSSendMessagePolicy:
             QueueName: !GetAtt PaymentResponseQueue.QueueName
       Environment:
         Variables:
-          ERROR_QUEUE: !GetAtt PaymentErrorQueue.QueueName
-          RESPONSE_QUEUE: !GetAtt PaymentResponseQueue.QueueName
+          REGION: !Ref AWS::Region
+          RESPONSEQUEUE: !GetAtt PaymentResponseQueue.QueueName
       Events:
         ValidateCreditcard:
           Type: SQS
@@ -126,6 +128,3 @@ Outputs:
   PaymentResponseQueueARN:
     Description: ARN for the Payment Response Queue
     Value: !GetAtt PaymentResponseQueue.Arn
-  PaymentErrorQueueARN:
-    Description: ARN for the Payment Error Queue
-    Value: !GetAtt PaymentErrorQueue.Arn
