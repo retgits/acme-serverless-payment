@@ -82,7 +82,7 @@ Resources:
   Payment:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: payment
+      Handler: lambda-sqs
       Runtime: go1.x
       CodeUri: bin/
       FunctionName: Payment
