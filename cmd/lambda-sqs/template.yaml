@@ -96,7 +96,7 @@ Resources:
       Environment:
         Variables:
           REGION: !Ref AWS::Region
-          RESPONSEQUEUE: !GetAtt PaymentResponseQueue.QueueName
+          RESPONSEQUEUE: !Ref PaymentResponseQueue
       Events:
         ValidateCreditcard:
           Type: SQS
