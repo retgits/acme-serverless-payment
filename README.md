@@ -32,7 +32,7 @@ Clone this repository
 
 ```bash
 git clone https://github.com/retgits/acme-serverless-payment
-cd payment
+cd acme-serverless-payment
 ```
 
 Get the Go Module dependencies
@@ -74,7 +74,7 @@ Clone this repository
 
 ```bash
 git clone https://github.com/retgits/acme-serverless-payment
-cd payment
+cd acme-serverless-payment
 ```
 
 Get the Go Module dependencies
