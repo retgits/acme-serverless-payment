@@ -1,4 +1,4 @@
-module github.com/retgits/payment
+module github.com/retgits/acme-serverless-payment
 
 go 1.13
 

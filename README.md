@@ -31,7 +31,7 @@ For all options there is a Lambda function ready to be deployed where events arr
 Clone this repository
 
 ```bash
-git clone https://github.com/retgits/payment
+git clone https://github.com/retgits/acme-serverless-payment
 cd payment
 ```
 
@@ -73,7 +73,7 @@ go run main.go -event=<any of the files existing in test/eventbridge> -location=
 Clone this repository
 
 ```bash
-git clone https://github.com/retgits/payment
+git clone https://github.com/retgits/acme-serverless-payment
 cd payment
 ```
 
@@ -255,7 +255,7 @@ The Magefile in this repository has a bunch of targets available:
 
 ## Contributing
 
-[Pull requests](https://github.com/retgits/payment/pulls) are welcome. For major changes, please open [an issue](https://github.com/retgits/payment/issues) first to discuss what you would like to change.
+[Pull requests](https://github.com/retgits/acme-serverless-payment/pulls) are welcome. For major changes, please open [an issue](https://github.com/retgits/acme-serverless-payment/issues) first to discuss what you would like to change.
 
 Please make sure to update tests as appropriate.
 

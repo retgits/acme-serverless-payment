@@ -2,7 +2,7 @@ package emitter
 
 import "encoding/json"
 
-import "github.com/retgits/payment"
+import "github.com/retgits/acme-serverless-payment"
 
 // Data ...
 type Data struct {

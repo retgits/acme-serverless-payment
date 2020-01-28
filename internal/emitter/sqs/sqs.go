@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/retgits/payment/internal/emitter"
+	"github.com/retgits/acme-serverless-payment/internal/emitter"
 )
 
 type responder struct{}

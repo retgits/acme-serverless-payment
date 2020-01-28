@@ -89,6 +89,7 @@ Resources:
       Description: A Lambda function to validate creditcard payments
       MemorySize: 256
       Timeout: 10
+      Tracing: Active
       Policies:
         - AWSLambdaRole
         - SQSSendMessagePolicy:

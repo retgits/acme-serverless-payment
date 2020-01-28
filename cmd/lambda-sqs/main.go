@@ -7,10 +7,10 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/gofrs/uuid"
-	"github.com/retgits/payment"
-	"github.com/retgits/payment/internal/emitter"
-	"github.com/retgits/payment/internal/emitter/sqs"
-	"github.com/retgits/payment/internal/validator"
+	"github.com/retgits/acme-serverless-payment"
+	"github.com/retgits/acme-serverless-payment/internal/emitter"
+	"github.com/retgits/acme-serverless-payment/internal/emitter/sqs"
+	"github.com/retgits/acme-serverless-payment/internal/validator"
 )
 
 func handler(request events.SQSEvent) error {

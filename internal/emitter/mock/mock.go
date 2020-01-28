@@ -3,7 +3,7 @@ package mock
 import (
 	"log"
 
-	"github.com/retgits/payment/internal/emitter"
+	"github.com/retgits/acme-serverless-payment/internal/emitter"
 )
 
 type responder struct{}
