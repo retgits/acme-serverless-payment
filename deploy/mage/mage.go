@@ -13,7 +13,7 @@ import (
 
 var (
 	stage    = "dev"
-	project  = "serverless-order"
+	project  = "serverless-payment"
 	author   = "retgits"
 	team     = "vcs"
 	s3bucket = "MyS3Bucket"
