@@ -25,7 +25,7 @@ Resources:
   Payment:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: lambda-eventbridge
+      Handler: lambda-payment-eventbridge
       Runtime: go1.x
       CodeUri: bin/
       FunctionName: Payment
