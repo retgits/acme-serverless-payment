@@ -422,6 +422,8 @@ github.com/retgits/creditcard v0.4.0 h1:4T2NiyMk1v5+mzAUqJxBrXtoik9Jn0YVFFe3oxzD
 github.com/retgits/creditcard v0.4.0/go.mod h1:ljNdnrAVOGfDT9zMmxibAR4p1mlTr6Y7PzseJXI4PZA=
 github.com/retgits/creditcard v0.5.0 h1:zj0qqIovA8rP8ejKsWYCN0EvD4fucJE98GH4VApqO3Y=
 github.com/retgits/creditcard v0.5.0/go.mod h1:ljNdnrAVOGfDT9zMmxibAR4p1mlTr6Y7PzseJXI4PZA=
+github.com/retgits/creditcard v0.6.0 h1:zjZy3W5WtUDGGbvW3pgnAzLOc1YpGG01uqYNntTxhu0=
+github.com/retgits/creditcard v0.6.0/go.mod h1:ljNdnrAVOGfDT9zMmxibAR4p1mlTr6Y7PzseJXI4PZA=
 github.com/retgits/wavefront-lambda-go v0.1.1-0.20191125162950-829ba5810925 h1:cm665oNuo/i2QidE+MUQlc9smSy2Njj9MIJCOzOtTJU=
 github.com/retgits/wavefront-lambda-go v0.1.1-0.20191125162950-829ba5810925/go.mod h1:w9b8nE4I+EwcHE6MQpuvr14CwOf+MdpKgqerTMNiyhk=
 github.com/rjeczalik/notify v0.9.2/go.mod h1:aErll2f0sUX9PXZnVNyeiObbmTlk5jnMoCa4QEjJeqM=
