@@ -85,7 +85,7 @@ Resources:
       Handler: lambda-payment-sqs
       Runtime: go1.x
       CodeUri: bin/
-      FunctionName: Payment
+      FunctionName: !Sub "Payment-${Stage}"
       Description: A Lambda function to validate creditcard payments
       MemorySize: 256
       Timeout: 10
