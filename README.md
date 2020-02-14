@@ -255,6 +255,12 @@ The Magefile in this repository has a bunch of targets available:
 
 The targets `build` and `deploy` need a variable **`TYPE`** set to either `eventbridge` or `sqs` to build and deploy the correct Lambda functions.
 
+## Using Serverless Framework
+
+If you want to use the Serverless Framework, rather than AWS Serverless Application Model you can use the deployment scripts in the [deploy/serverless](./deploy/serverless/) folder.
+
+The Makefile, similar to the one used for CloudFormation, has one extra command (`make plugins`) to install the required plugins for the Serverless Framework. To deploy, an additional environment variable (`AWS_ACCOUNTID`) is used, which should be the account ID to which you deploy.
+
 ## Contributing
 
 [Pull requests](https://github.com/retgits/acme-serverless-payment/pulls) are welcome. For major changes, please open [an issue](https://github.com/retgits/acme-serverless-payment/issues) first to discuss what you would like to change.

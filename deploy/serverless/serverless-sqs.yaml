@@ -1,0 +1,210 @@
+## The Serverless framework template for the Payment service
+service:
+  name: payment
+
+## Pin your service to only deploy with a specific Serverless version, based on the required version for the serverless-offline plugin 
+frameworkVersion: '>=1.58.0 <2.0.0'
+
+## Set the provider context
+provider:
+  name: aws
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'us-west-2'}
+  stackName: ${self:service}-${self:provider.stage}
+  logRetentionInDays: 1
+  deploymentBucket:
+    name: ${opt:bucket, 'unknown'}
+    maxPreviousDeploymentArtifacts: 1
+    blockPublicAccess: true
+  deploymentPrefix: ${self:service}-${self:provider.stage}
+  versionFunctions: false
+  tags:
+    version: ${opt:vrs, 'unknown'}
+    author: ${opt:author, 'unknown'}
+    team: ${opt:team, 'unknown'}
+    feature: ${opt:feature, 'unknown'}
+    region: ${self:provider.region}
+
+## Optional deployment packaging configuration
+package:
+  exclude:
+    - ./**
+  include:
+    - ./bin/**
+
+## The AWS Lambda functions that should be deployed
+functions:
+  payment:
+    handler: bin/lambda-payment-sqs
+    name: ${self:service}-${self:provider.stage}
+    description: A Lambda function to validate creditcard payments
+    memorySize: 256
+    runtime: go1.x
+    timeout: 10
+    role: arn:aws:iam::${opt:accountID}:role/ACMEServerlessPaymentRole
+    environment:
+      REGION: ${self:provider.region}
+      RESPONSEQUEUE: !Ref PaymentResponseQueue
+    tracing: Active
+    events:
+      - sqs:
+          arn: !GetAtt PaymentRequestQueue.Arn
+          batchSize: 10
+
+## The "Resources" your "Functions" use (raw AWS CloudFormation goes in here).
+resources:
+  Resources:
+    PaymentRole:
+      Type: AWS::IAM::Role
+      Properties:
+        Description: AWS Lambda Role for ACME Serverless Payments
+        MaxSessionDuration: 3600
+        RoleName: ACMEServerlessPaymentRole
+        Tags: 
+          - Key: version
+            Value: ${opt:vrs, 'unknown'}
+          - Key: author
+            Value: ${opt:author, 'unknown'}
+          - Key: team
+            Value: ${opt:team, 'unknown'}
+          - Key: feature
+            Value: ${opt:feature, 'unknown'}
+          - Key: region
+            Value: ${self:provider.region}
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - lambda.amazonaws.com
+              Action: sts:AssumeRole
+        Policies:
+          - PolicyName: paymentRolePolicy
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - logs:CreateLogGroup
+                    - logs:CreateLogStream
+                    - logs:PutLogEvents
+                  Resource:
+                    - 'Fn::Join':
+                      - ':'
+                      -
+                        - 'arn:aws:logs'
+                        - Ref: 'AWS::Region'
+                        - Ref: 'AWS::AccountId'
+                        - 'log-group:/aws/lambda/*:*:*'
+                - Effect: Allow
+                  Action:
+                    - xray:PutTraceSegments
+                    - xray:PutTelemetryRecords
+                  Resource: "*"
+                - Effect: Allow
+                  Action:
+                    - sqs:ReceiveMessage
+                    - sqs:DeleteMessage
+                    - sqs:GetQueueAttributes
+                  Resource:
+                    - 'Fn::Join':
+                      - ':'
+                      -
+                        - 'arn:aws:sqs'
+                        - Ref: 'AWS::Region'
+                        - Ref: 'AWS::AccountId'
+                        - '${self:provider.stage}-${opt:feature}-payment-request'
+                - Effect: Allow
+                  Action:
+                    - sqs:SendMessage*
+                  Resource:
+                    - 'Fn::Join':
+                      - ':'
+                      -
+                        - 'arn:aws:sqs'
+                        - Ref: 'AWS::Region'
+                        - Ref: 'AWS::AccountId'
+                        - '${self:provider.stage}-${opt:feature}-payment-response'
+    PaymentRequestQueue:
+      Type: AWS::SQS::Queue
+      Properties: 
+        MessageRetentionPeriod: 120
+        QueueName: ${self:provider.stage}-${opt:feature}-payment-request
+        RedrivePolicy:
+          deadLetterTargetArn: !GetAtt PaymentErrorQueue.Arn
+          maxReceiveCount: 1
+        Tags: 
+          - Key: version
+            Value: ${opt:vrs, 'unknown'}
+          - Key: author
+            Value: ${opt:author, 'unknown'}
+          - Key: team
+            Value: ${opt:team, 'unknown'}
+          - Key: feature
+            Value: ${opt:feature, 'unknown'}
+          - Key: region
+            Value: ${self:provider.region}
+        VisibilityTimeout: 30
+    PaymentResponseQueue:
+      Type: AWS::SQS::Queue
+      Properties: 
+        MessageRetentionPeriod: 120
+        QueueName: ${self:provider.stage}-${opt:feature}-payment-response
+        RedrivePolicy:
+          deadLetterTargetArn: !GetAtt PaymentErrorQueue.Arn
+          maxReceiveCount: 1
+        Tags: 
+          - Key: version
+            Value: ${opt:vrs, 'unknown'}
+          - Key: author
+            Value: ${opt:author, 'unknown'}
+          - Key: team
+            Value: ${opt:team, 'unknown'}
+          - Key: feature
+            Value: ${opt:feature, 'unknown'}
+          - Key: region
+            Value: ${self:provider.region}
+        VisibilityTimeout: 30
+    PaymentErrorQueue:
+      Type: AWS::SQS::Queue
+      Properties: 
+        MessageRetentionPeriod: 120
+        QueueName: ${self:provider.stage}-${opt:feature}-payment-error
+        Tags: 
+          - Key: version
+            Value: ${opt:vrs, 'unknown'}
+          - Key: author
+            Value: ${opt:author, 'unknown'}
+          - Key: team
+            Value: ${opt:team, 'unknown'}
+          - Key: feature
+            Value: ${opt:feature, 'unknown'}
+          - Key: region
+            Value: ${self:provider.region}
+        VisibilityTimeout: 30
+
+## The "Outputs" that your AWS CloudFormation Stack should produce.
+Outputs:
+  PaymentARN:
+    Description: ARN for the Payment function
+    Value: 
+      'Fn::GetAtt': [Payment, Arn]
+    Export:
+      Name: ${self:service}:${opt:stage}:Payment
+  PaymentRequestQueueARN:
+    Description: ARN for the Payment Request Queue
+    Value: 
+      'Fn::GetAtt': [PaymentRequestQueue, Arn]
+    Export:
+      Name: ${self:service}:${opt:stage}:PaymentRequestQueue
+  PaymentResponseQueueARN:
+    Description: ARN for the Payment Response Queue
+    Value: 
+      'Fn::GetAtt': [PaymentResponseQueue, Arn]
+    Export:
+      Name: ${self:service}:${opt:stage}:PaymentResponseQueue
+
+## Plugins needed by the Serverless
+plugins:
+  - serverless-offline
