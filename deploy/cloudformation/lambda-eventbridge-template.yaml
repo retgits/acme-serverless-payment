@@ -19,6 +19,9 @@ Parameters:
   Stage:
     Type: String
     Default: dev
+  SentryDSN:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /Sentry/Dsn
 
 ## Specifies the stack resources and their properties.
 Resources:
@@ -39,6 +42,10 @@ Resources:
         Variables:
           REGION: !Ref AWS::Region
           EVENTBUS: !Ref Feature
+          SENTRY_DSN: !Ref SentryDSN
+          FUNCTION_NAME: Payment
+          VERSION: !Ref Version
+          STAGE: !Ref Stage
       Events:
         ValidateCreditcard:
           Type: CloudWatchEvent
