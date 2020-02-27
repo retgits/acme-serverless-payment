@@ -1,0 +1,119 @@
+name: Continuous Verification
+
+## Trigger on push to master, except when the release tag is created
+on:
+  push:
+    branches:
+      - master
+    tags-ignore:
+      - v*.*.*-release
+
+jobs:  
+  build:
+    name: Build
+    runs-on: self-hosted
+    steps:
+      - name: Install Go
+        id: go-install
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.13
+
+      - name: Checkout code
+        id: gh-checkout
+        uses: actions/checkout@v2
+
+      - name: Get Go modules
+        id: go-get
+        run: go get -v -t -d ./...
+
+      - name: Run Go build
+        id: go-build
+        run: cd ./deploy/cloudformation && make -f Makefile.lambda build TYPE=$TYPE
+        env:
+          TYPE: sqs
+
+  scanning:
+    name: Scanning for Vulnerabilities
+    runs-on: self-hosted
+    needs: build
+    steps:
+      - name: Checkout code
+        id: gh-checkout
+        uses: actions/checkout@v2
+      - name: Vulnerability scan
+        id: go-scan
+        uses: snyk/actions/golang@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: self-hosted
+    needs: scanning
+    steps:
+      - name: Run AWS CloudFormation Deploy
+        id: aws-cf-deploy
+        run: cd ./deploy/cloudformation && make -f Makefile.lambda deploy TYPE=$TYPE author=$AUTHOR team=$TEAM stage=$STAGE version=$VERSION
+        env:
+          TYPE: sqs
+          AWS_S3_BUCKET: retgits-lambda-storage
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          STAGE: stg
+          VERSION: ${{ github.sha }}
+          AUTHOR: ${{ github.actor }}
+          TEAM: vcs
+          AWS_DEFAULT_REGION: us-west-2
+
+  governance:
+    name: Run Governance checks
+    runs-on: self-hosted
+    needs: deploy-staging
+    steps:
+      - name: Validate AWS Security Best Practices
+        id: aws-security
+        uses: docker://toniblyx/prowler:latest
+        with:
+          args: -c check112
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+  performance:
+    name: Run performance tests
+    runs-on: self-hosted
+    needs: deploy-staging
+    steps:
+      - name: Run performance test
+        id: aws-performance-test
+        run: echo This is where you can run your performance tests...
+      - name: Validate performance
+        id: aws-performance-validate
+        run: export ENDDATE=`date -u '+%Y-%m-%dT%TZ'` && export STARTDATE=`date -u -d "1 day ago" '+%Y-%m-%dT%TZ'` && export DURATION=`aws cloudwatch get-metric-statistics --metric-name Duration --start-time $STARTDATE --end-time $ENDDATE --period 3600 --namespace AWS/Lambda --statistics Average --dimensions Name=FunctionName,Value=$FUNCTION | jq '.Datapoints | map(.Average) | add'` && if (($DURATION > 3000)); then echo "Alert" && exit 1; else echo "Within range. Continuing"; fi
+        env:
+          FUNCTION: AllCarts
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-west-2
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: self-hosted
+    needs: 
+      - governance
+      - performance
+    steps:
+      - name: Run AWS CloudFormation Deploy
+        id: aws-cf-deploy
+        run: cd ./deploy/cloudformation && make -f Makefile.lambda deploy TYPE=$TYPE author=$AUTHOR team=$TEAM stage=$STAGE version=$VERSION
+        env:
+          TYPE: prd
+          AWS_S3_BUCKET: retgits-lambda-storage
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          STAGE: stg
+          VERSION: ${{ github.sha }}
+          AUTHOR: ${{ github.actor }}
+          TEAM: vcs
+          AWS_DEFAULT_REGION: us-west-2
