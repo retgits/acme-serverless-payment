@@ -57,11 +57,7 @@ make deploy TYPE=eventbridge
 
 ### Testing EventBridge
 
-You can test the function from the [AWS Lambda Console](https://console.aws.amazon.com/lambda/home) using the test data from the files in [eventbridge](./test/eventbridge/). To send a message to the event bus, you can use the app in `./cmd/test-eventbridge` and run
-
-```bash
-go run main.go -event=<any of the files existing in test/eventbridge> -location=<location on disk of the test/eventbridge folder> -bus=<name of the custom bus>
-```
+To send a message to an Amazon EventBridge eventbus, check out the [acme-serverless README](https://github.com/retgits/acme-serverless#testing-eventbridge)
 
 ### Prerequisites for SQS
 
@@ -97,36 +93,7 @@ make deploy TYPE=sqs
 
 ### Testing SQS
 
-To send a message to an SQS queue using the test data from the files in [sqs](./test/sqs/), you can use the app in `./cmd/test-sqs` and run
-
-```bash
-go run main.go -event=<any of the files existing in test/sqs> -location=<location on disk of the test/sqs folder> -queue=<name of the sqs queue>
-```
-
-If you want to test from the [AWS Lambda Console](https://console.aws.amazon.com/lambda/home), you'll have to wrap the test data in a SQS record envelop:
-
-```json
-{
-  "Records": [
-    {
-      "messageId": "19dd0b57-b21e-4ac1-bd88-01bbb068cb78",
-      "receiptHandle": "MessageReceiptHandle",
-      "body": "", // This is where the data, an escaped JSON string, should be pasted
-      "attributes": {
-        "ApproximateReceiveCount": "1",
-        "SentTimestamp": "1523232000000",
-        "SenderId": "123456789012",
-        "ApproximateFirstReceiveTimestamp": "1523232000001"
-      },
-      "messageAttributes": {},
-      "md5OfBody": "7b270e59b47ff90a553787216d55d91d",
-      "eventSource": "aws:sqs",
-      "eventSourceARN": "arn:aws:sqs:us-east-1:123456789012:MyQueue",
-      "awsRegion": "us-east-1"
-    }
-  ]
-}
-```
+To send a message to an SQS queue, check out the [acme-serverless README](https://github.com/retgits/acme-serverless#testing-sqs)
 
 ## Events
 
