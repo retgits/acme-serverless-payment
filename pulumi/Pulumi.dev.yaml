@@ -1,0 +1,15 @@
+config:
+  aws:region: us-west-2
+  awsconfig:lambda:
+    type: sqs
+    bucket: retgits-lambda-storage
+    responsequeue: 
+    requestqueue: 
+    eventbus: bla
+    region: us-west-2
+    sentrydsn: bla
+  awsconfig:tags:
+    author: retgits
+    feature: acmeserverless
+    team: vcs
+    version: 0.1.0

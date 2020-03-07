@@ -1,0 +1,3 @@
+name: acmeserverless-payment
+runtime: go
+description: The Payment service is part of the ACME Fitness Serverless Shop. The goal of this specific service is to validate credit card payments. Currently the only validation performed is whether the card is acceptable.

@@ -1,3 +1,6 @@
+// Package validator validates the creditcard and leverages the
+// github.com/retgits/creditcard module to check expiry, creditcard
+// number, and cvv code.
 package validator
 
 import (
@@ -6,13 +9,15 @@ import (
 	"github.com/retgits/creditcard"
 )
 
-type validator struct{}
+type check struct{}
 
-func New() validator {
-	return validator{}
+// New creates a new instance of the validator.
+func New() check {
+	return check{}
 }
 
-func (v *validator) Creditcard(card creditcard.Card) error {
+// Creditcard validates the creditcard using the logic from github.com/retgits/creditcard.
+func (v *check) Creditcard(card creditcard.Card) error {
 	// Validate the card
 	res := card.Validate()
 
