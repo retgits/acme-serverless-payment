@@ -227,7 +227,7 @@ func main() {
 				BatchSize:      pulumi.Int(1),
 				Enabled:        pulumi.Bool(true),
 				FunctionName:   function.Arn,
-				EventSourceArn: pulumi.String(lambdaConfig.PaymentResponseQueue),
+				EventSourceArn: pulumi.String(lambdaConfig.PaymentRequestQueue),
 			}
 
 			_, err := lambda.NewEventSourceMapping(ctx, fmt.Sprintf("%s-lambda-payment", ctx.Stack()), sqsMapping)
