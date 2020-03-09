@@ -84,7 +84,7 @@ func main() {
 		tagMap["Stage"] = pulumi.String(ctx.Stack())
 
 		// Compile and upload the AWS Lambda functions only if this isn't a dry run
-		if !ctx.DryRun() && 1 == 2 {
+		if !ctx.DryRun() {
 			wd, err := os.Getwd()
 			if err != nil {
 				return err
