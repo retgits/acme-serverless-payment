@@ -15,6 +15,9 @@ const (
 	// CreditCardValidatedEvent is the event name of CreditCardValidated
 	CreditCardValidatedEvent = "CreditCardValidated"
 
+	// PaymentRequestedEvent is the event name of PaymentRequested
+	PaymentRequestedEvent = "PaymentRequestedEvent"
+
 	// DefaultSuccessMessage is the default success message used
 	DefaultSuccessMessage = "transaction successful"
 

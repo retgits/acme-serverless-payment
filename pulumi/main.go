@@ -90,18 +90,22 @@ func main() {
 				return err
 			}
 
+			// Find the working folder
 			fnFolder := path.Join(wd, "..", "cmd", fmt.Sprintf("lambda-payment-%s", lambdaConfig.EventingType))
 
+			// Run go build
 			if err := run(fnFolder, "GOOS=linux GOARCH=amd64 go build"); err != nil {
 				fmt.Printf("Error building code: %s", err.Error())
 				os.Exit(1)
 			}
 
+			// Zip up the binary
 			if err := run(fnFolder, fmt.Sprintf("zip ./lambda-payment-%s.zip, ./lambda-payment-%s", lambdaConfig.EventingType, lambdaConfig.EventingType)); err != nil {
 				fmt.Printf("Error creating zipfile: %s", err.Error())
 				os.Exit(1)
 			}
 
+			// Upload to AWS S3
 			if err := run(fnFolder, fmt.Sprintf("aws s3 cp ./lambda-payment-%s.zip, s3://%s/acmeserverless/%s/lambda-payment-%s.zip", lambdaConfig.EventingType, lambdaConfig.S3Bucket, ctx.Stack(), lambdaConfig.EventingType)); err != nil {
 				fmt.Printf("Error creating zipfile: %s", err.Error())
 				os.Exit(1)
@@ -127,7 +131,6 @@ func main() {
 			Tags:        pulumi.Map(tagMap),
 		}
 
-		// Create the role for the Lambda function
 		role, err := iam.NewRole(ctx, "ACMEServerlessPaymentRole", roleArgs)
 		if err != nil {
 			return err
@@ -144,7 +147,7 @@ func main() {
 		}
 
 		// In case the Lambda function uses SQS, add a policy document
-		// to allow the function to use SQS
+		// to allow the function to use SQS as event source
 		if lambdaConfig.EventingType == "sqs" {
 			policyString := fmt.Sprintf(`{
 				"Version": "2012-10-17",
@@ -201,7 +204,7 @@ func main() {
 			Variables: pulumi.StringMap(variables),
 		}
 
-		// The set of arguments for constructing a Function resource.
+		// Create the AWS Lambda function
 		functionArgs := &lambda.FunctionArgs{
 			Description: pulumi.String("A Lambda function to validate creditcard payments"),
 			Runtime:     pulumi.String("go1.x"),
@@ -216,7 +219,6 @@ func main() {
 			Tags:        pulumi.Map(tagMap),
 		}
 
-		// NewFunction registers a new resource with the given unique name, arguments, and options.
 		function, err := lambda.NewFunction(ctx, fmt.Sprintf("%s-lambda-payment", ctx.Stack()), functionArgs)
 		if err != nil {
 			return err

@@ -41,6 +41,14 @@ func handler(request events.SQSEvent) error {
 		return handleError("unmarshaling payment", err)
 	}
 
+	// Send a breadcrumb to Sentry with the validation request
+	sentry.AddBreadcrumb(&sentry.Breadcrumb{
+		Category:  payment.PaymentRequestedEvent,
+		Timestamp: time.Now().Unix(),
+		Level:     sentry.LevelInfo,
+		Data:      req.Data.ToMap(),
+	})
+
 	// Generate the event to emit
 	evt := payment.CreditCardValidated{
 		Metadata: payment.Metadata{

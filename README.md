@@ -40,7 +40,17 @@ config:
     version: 0.1.0 ## The version
 ```
 
+If you're using Amazon SQS, the items `responsequeue` and `requestqueue` are mandatory. In case you're using Amazon EventBridge, the item `eventbus` is mandatory.
+
 To create the Pulumi stack, and create the Payment service, run `pulumi up`.
+
+If you want to keep track of the resources in Pulumi, you can add tags to your stack as well.
+
+```bash
+pulumi stack tag set app:name acmeserverless
+pulumi stack tag set app:feature acmeserverless-payment
+pulumi stack tag set app:domain payment
+```
 
 To test, you can use the SQS or EventBridge test apps in the [acme-serverless](https://github.com/retgits/acme-serverless) repo.
 

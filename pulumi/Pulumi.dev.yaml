@@ -3,9 +3,9 @@ config:
   awsconfig:lambda:
     type: sqs
     bucket: retgits-lambda-storage
-    responsequeue: 
-    requestqueue: 
-    eventbus: bla
+    responsequeue: arn:aws:sqs:us-west-2:060748960857:dev-acmeserverless-sqs-payment-response
+    requestqueue: arn:aws:sqs:us-west-2:060748960857:dev-acmeserverless-sqs-payment-request
+    eventbus: acmeserverless
     region: us-west-2
     sentrydsn: bla
   awsconfig:tags:
