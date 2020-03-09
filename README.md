@@ -13,6 +13,8 @@ The Payment service is part of the [ACME Fitness Serverless Shop](https://github
 
 ## Deploying
 
+### With Pulumi (using SQS for eventing)
+
 To deploy the Payment Service you'll need a [Pulumi account](https://app.pulumi.com/signup). Once you have your Pulumi account and configured the [Pulumi CLI](https://www.pulumi.com/docs/get-started/aws/install-pulumi/), you can initialize a new stack using the Pulumi templates in the [pulumi](./pulumi) folder.
 
 ```bash
@@ -26,11 +28,9 @@ The [Pulumi.dev.yaml](./pulumi/Pulumi.dev.yaml) file contains all configuration 
 config:
   aws:region: us-west-2 ## The region you want to deploy to
   awsconfig:lambda:
-    type: sqs ## The event source you want to use (either sqs or eventbridge)
     bucket: mybucket ## The bucket in which you want to store the Lambda code
     responsequeue: ## The ARN of the Payment Response SQS queue (which you can create using the Pulumi deployment in the acme-serverless repo)
     requestqueue: ## The ARN of the Payment Request SQS queue (which you can create using the Pulumi deployment in the acme-serverless repo)
-    eventbus: ## The name of the EventBridge custom event bus (which you can create using the scripts in the acme-serverless repo)
     region: us-west-2 ## The region you want to deploy to
     sentrydsn: ## The DSN to connect to Sentry
   awsconfig:tags:
@@ -39,8 +39,6 @@ config:
     team: vcs ## The team you're on
     version: 0.1.0 ## The version
 ```
-
-If you're using Amazon SQS, the items `responsequeue` and `requestqueue` are mandatory. In case you're using Amazon EventBridge, the item `eventbus` is mandatory.
 
 To create the Pulumi stack, and create the Payment service, run `pulumi up`.
 
@@ -51,6 +49,36 @@ pulumi stack tag set app:name acmeserverless
 pulumi stack tag set app:feature acmeserverless-payment
 pulumi stack tag set app:domain payment
 ```
+
+### With CloudFormation (using EventBridge for eventing)
+
+Clone this repository
+
+```bash
+git clone https://github.com/retgits/acme-serverless-payment
+cd acme-serverless-payment
+```
+
+Get the Go Module dependencies
+
+```bash
+go get ./...
+```
+
+Change directories to the [cloudformation](./cloudformation) folder
+
+```bash
+cd ./cloudformation
+```
+
+If your event bus is not called _acmeserverless_, update the name of the `feature` parameter in the `template.yaml` file. Now you can build and deploy the Lambda function:
+
+```bash
+make build
+make deploy
+```
+
+## Testing
 
 To test, you can use the SQS or EventBridge test apps in the [acme-serverless](https://github.com/retgits/acme-serverless) repo.
 

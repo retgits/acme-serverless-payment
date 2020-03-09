@@ -1,11 +1,9 @@
 config:
   aws:region: us-west-2
   awsconfig:lambda:
-    type: sqs
     bucket: retgits-lambda-storage
     responsequeue: arn:aws:sqs:us-west-2:ACCOUNTID:dev-acmeserverless-sqs-payment-response
     requestqueue: arn:aws:sqs:us-west-2:ACCOUNTID:dev-acmeserverless-sqs-payment-request
-    eventbus: acmeserverless
     region: us-west-2
     sentrydsn: bla
   awsconfig:tags:
