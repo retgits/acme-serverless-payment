@@ -94,13 +94,13 @@ func main() {
 			}
 
 			// Zip up the binary
-			if err := run(fnFolder, "zip ./lambda-payment-sqs.zip, ./lambda-payment-sqs"); err != nil {
+			if err := run(fnFolder, "zip ./lambda-payment-sqs.zip ./lambda-payment-sqs"); err != nil {
 				fmt.Printf("Error creating zipfile: %s", err.Error())
 				os.Exit(1)
 			}
 
 			// Upload to AWS S3
-			if err := run(fnFolder, fmt.Sprintf("aws s3 cp ./lambda-payment-sqs.zip, s3://%s/acmeserverless/%s/lambda-payment-sqs.zip", lambdaConfig.S3Bucket, ctx.Stack())); err != nil {
+			if err := run(fnFolder, fmt.Sprintf("aws s3 cp ./lambda-payment-sqs.zip s3://%s/acmeserverless/%s/lambda-payment-sqs.zip", lambdaConfig.S3Bucket, ctx.Stack())); err != nil {
 				fmt.Printf("Error creating zipfile: %s", err.Error())
 				os.Exit(1)
 			}
