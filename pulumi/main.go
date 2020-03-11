@@ -181,7 +181,7 @@ func main() {
 			Timeout:     pulumi.Int(10),
 			Handler:     pulumi.String("lambda-payment-sqs"),
 			Environment: environment,
-			Code:        pulumi.NewFileArchive("./cmd/lambda-payment-sqs/lambda-payment-sqs.zip"),
+			Code:        pulumi.NewFileArchive("../cmd/lambda-payment-sqs/lambda-payment-sqs.zip"),
 			Role:        role.Arn,
 			Tags:        pulumi.Map(tagMap),
 		}
