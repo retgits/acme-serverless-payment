@@ -74,27 +74,25 @@ func main() {
 		tagMap["ManagedBy"] = pulumi.String("Pulumi")
 		tagMap["Stage"] = pulumi.String(ctx.Stack())
 
-		// Compile and upload the AWS Lambda functions only if this isn't a dry run
-		if !ctx.DryRun() {
-			wd, err := os.Getwd()
-			if err != nil {
-				return err
-			}
+		// Compile and zip the AWS Lambda functions
+		wd, err := os.Getwd()
+		if err != nil {
+			return err
+		}
 
-			// Find the working folder
-			fnFolder := path.Join(wd, "..", "cmd", "lambda-payment-sqs")
+		// Find the working folder
+		fnFolder := path.Join(wd, "..", "cmd", "lambda-payment-sqs")
 
-			// Run go build
-			if err := run(fnFolder, "GOOS=linux GOARCH=amd64 go build"); err != nil {
-				fmt.Printf("Error building code: %s", err.Error())
-				os.Exit(1)
-			}
+		// Run go build
+		if err := run(fnFolder, "GOOS=linux GOARCH=amd64 go build"); err != nil {
+			fmt.Printf("Error building code: %s", err.Error())
+			os.Exit(1)
+		}
 
-			// Zip up the binary
-			if err := run(fnFolder, "zip ./lambda-payment-sqs.zip ./lambda-payment-sqs"); err != nil {
-				fmt.Printf("Error creating zipfile: %s", err.Error())
-				os.Exit(1)
-			}
+		// Zip up the binary
+		if err := run(fnFolder, "zip ./lambda-payment-sqs.zip ./lambda-payment-sqs"); err != nil {
+			fmt.Printf("Error creating zipfile: %s", err.Error())
+			os.Exit(1)
 		}
 
 		// Create the IAM policy for the function.
