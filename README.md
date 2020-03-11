@@ -22,7 +22,7 @@ cd pulumi
 pulumi stack init <your pulumi org>/acmeserverless-payment/dev
 ```
 
-The [Pulumi.dev.yaml](./pulumi/Pulumi.dev.yaml) file contains all configuration data to deploy the app:
+You'll need to create a [Pulumi.dev.yaml](./pulumi/Pulumi.dev.yaml) file that will contain all configuration data to deploy the app:
 
 ```yaml
 config:
