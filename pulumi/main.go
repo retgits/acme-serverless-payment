@@ -37,9 +37,6 @@ type Tags struct {
 
 // LambdaConfig contains the key-value pairs for the configuration of AWS Lambda in this stack
 type LambdaConfig struct {
-	// The S3 bucket to upload the compiled and zipped code to
-	S3Bucket string `json:"bucket"`
-
 	// The SQS queue to send responses to
 	PaymentResponseQueue string `json:"responsequeue"`
 

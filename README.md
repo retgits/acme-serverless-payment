@@ -28,7 +28,6 @@ You'll need to create a [Pulumi.dev.yaml](./pulumi/Pulumi.dev.yaml) file that wi
 config:
   aws:region: us-west-2 ## The region you want to deploy to
   awsconfig:lambda:
-    bucket: mybucket ## The bucket in which you want to store the Lambda code
     responsequeue: ## The ARN of the Payment Response SQS queue (which you can create using the Pulumi deployment in the acme-serverless repo)
     requestqueue: ## The ARN of the Payment Request SQS queue (which you can create using the Pulumi deployment in the acme-serverless repo)
     region: us-west-2 ## The region you want to deploy to

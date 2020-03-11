@@ -6,8 +6,6 @@ template:
       aws:region:
         description: The AWS region to deploy into
       awsconfig:lambda:
-        bucket:
-          description: The bucket in which you want to store the Lambda code
         responsequeue:
           description: The ARN of the Shipment Response SQS queue (which you can create using the Pulumi deployment in the acme-serverless repo)
         requestqueue:
