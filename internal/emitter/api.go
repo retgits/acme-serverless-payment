@@ -1,35 +1,16 @@
+// Package emitter contains the interfaces that the Payment service
+// in the ACME Serverless Fitness Shop needs to send events to other
+// services. In order to add a new service, the EventEmitter interface
+// needs to be implemented.
 package emitter
 
-import "encoding/json"
+import (
+	payment "github.com/retgits/acme-serverless-payment"
+)
 
-import "github.com/retgits/acme-serverless-payment"
-
-// Data ...
-type Data struct {
-	Success       bool   `json:"success"`
-	Status        int    `json:"status"`
-	Message       string `json:"message"`
-	Amount        string `json:"amount,omitempty"`
-	TransactionID string `json:"transactionID"`
-	OrderID       string `json:"orderID"`
-}
-
-// Event ...
-type Event struct {
-	Metadata payment.Metadata `json:"metadata"`
-	Data     Data             `json:"data"`
-}
-
-// EventEmitter ...
+// EventEmitter is the interface that describes the methods the
+// eventing service needs to implement to be able to work with
+// the ACME Serverless Fitness Shop.
 type EventEmitter interface {
-	Send(e Event) error
-}
-
-// Marshal returns the JSON encoding of Event.
-func (e *Event) Marshal() (string, error) {
-	b, err := json.Marshal(e)
-	if err != nil {
-		return "", err
-	}
-	return string(b), nil
+	Send(e payment.CreditCardValidated) error
 }

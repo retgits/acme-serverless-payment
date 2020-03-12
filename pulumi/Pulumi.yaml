@@ -1,0 +1,27 @@
+name: acmeserverless-payment
+runtime: go
+description: The Payment service is part of the ACME Fitness Serverless Shop. The goal of this specific service is to validate credit card payments. Currently the only validation performed is whether the card is acceptable.
+template:
+  config:
+      aws:region:
+        description: The AWS region to deploy into
+      awsconfig:lambda:
+        responsequeue:
+          description: The ARN of the Shipment Response SQS queue (which you can create using the Pulumi deployment in the acme-serverless repo)
+        requestqueue:
+          description: The ARN of the Shipment Request SQS queue (which you can create using the Pulumi deployment in the acme-serverless repo)
+        region:
+          description: The AWS region to deploy into
+        sentrydsn:
+          description: The DSN to connect to Sentry
+      awsconfig:tags:
+        author:
+          description: The author, you...
+        feature:
+          description: The name of the overall app you're deploying
+          default: acmeserverless
+        team:
+          description: The team you're on
+        version:
+          description: The version
+          default: 0.1.0

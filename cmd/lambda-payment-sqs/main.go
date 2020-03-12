@@ -1,3 +1,8 @@
+// Package main is a payment service, because nothing in life is really free...
+//
+// The Payment service is part of the [ACME Fitness Serverless Shop](https://github.com/retgits/acme-serverless).
+// The goal of this specific service is to validate credit card payments. Currently the only validation performed
+// is whether the card is acceptable. After completing validation a "CreditCardValidated" event is sent.
 package main
 
 import (
@@ -12,84 +17,96 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/gofrs/uuid"
 	payment "github.com/retgits/acme-serverless-payment"
-	"github.com/retgits/acme-serverless-payment/internal/emitter"
 	"github.com/retgits/acme-serverless-payment/internal/emitter/sqs"
 	"github.com/retgits/acme-serverless-payment/internal/validator"
 )
 
+// handler handles the SQS events and returns an error if anything goes wrong.
+// The resulting event, if no error is thrown, is sent to an SQS queue.
 func handler(request events.SQSEvent) error {
-	sentrySyncTransport := sentry.NewHTTPSyncTransport()
-	sentrySyncTransport.Timeout = time.Second * 3
-
+	// Initiialize a connection to Sentry to capture errors and traces
 	sentry.Init(sentry.ClientOptions{
-		Dsn:         os.Getenv("SENTRY_DSN"),
-		Transport:   sentrySyncTransport,
+		Dsn: os.Getenv("SENTRY_DSN"),
+		Transport: &sentry.HTTPSyncTransport{
+			Timeout: time.Second * 3,
+		},
 		ServerName:  os.Getenv("FUNCTION_NAME"),
 		Release:     os.Getenv("VERSION"),
 		Environment: os.Getenv("STAGE"),
 	})
 
-	req, err := payment.UnmarshalPaymentEvent([]byte(request.Records[0].Body))
+	// Unmarshal the PaymentRequested event to a struct
+	req, err := payment.UnmarshalPaymentRequested([]byte(request.Records[0].Body))
 	if err != nil {
-		sentry.CaptureException(fmt.Errorf("error unmarshalling payment: %s", err.Error()))
-		return err
+		return handleError("unmarshaling payment", err)
 	}
 
-	em := sqs.New()
-	evt := emitter.Event{
+	// Send a breadcrumb to Sentry with the validation request
+	sentry.AddBreadcrumb(&sentry.Breadcrumb{
+		Category:  payment.PaymentRequestedEvent,
+		Timestamp: time.Now().Unix(),
+		Level:     sentry.LevelInfo,
+		Data:      req.Data.ToMap(),
+	})
+
+	// Generate the event to emit
+	evt := payment.CreditCardValidated{
 		Metadata: payment.Metadata{
-			Domain: "Payment",
+			Domain: payment.Domain,
 			Source: "ValidateCreditCard",
-			Type:   "CreditCardValidated",
+			Type:   payment.CreditCardValidatedEvent,
 			Status: "success",
 		},
-		Data: emitter.Data{
+		Data: payment.PaymentData{
 			Success:       true,
 			Status:        http.StatusOK,
-			Message:       "transaction successful",
-			Amount:        req.Request.Total,
-			OrderID:       req.Request.OrderID,
+			Message:       payment.DefaultSuccessMessage,
+			Amount:        req.Data.Total,
+			OrderID:       req.Data.OrderID,
 			TransactionID: uuid.Must(uuid.NewV4()).String(),
 		},
 	}
 
-	crumb := sentry.Breadcrumb{
-		Category:  "CreditCardValidated",
-		Timestamp: time.Now().Unix(),
-		Level:     sentry.LevelInfo,
-		Data: map[string]interface{}{
-			"Amount":  req.Request.Total,
-			"OrderID": req.Request.OrderID,
-			"Success": true,
-			"Message": "transaction successful",
-		},
-	}
-
-	validator := validator.New()
-	err = validator.Creditcard(req.Request.Card)
+	// Check the creditcard is valid.
+	// If the creditcard is not valid, update the event to emit
+	// with new information
+	check := validator.New()
+	err = check.Creditcard(req.Data.Card)
 	if err != nil {
 		evt.Metadata.Status = "error"
 		evt.Data.Success = false
 		evt.Data.Status = http.StatusBadRequest
-		evt.Data.Message = "creditcard validation has failed, unable to process payment"
+		evt.Data.Message = payment.DefaultErrorMessage
 		evt.Data.TransactionID = "-1"
-		crumb.Data["Success"] = evt.Data.Success
-		crumb.Data["Message"] = evt.Data.Message
-		sentry.CaptureException(fmt.Errorf("validation failed for order [%s] : %s", req.Request.OrderID, err.Error()))
-		log.Printf("Validation failed: %s", err.Error())
+		handleError("validating creditcard", err)
 	}
 
-	sentry.AddBreadcrumb(&crumb)
+	// Send a breadcrumb to Sentry with the validation result
+	sentry.AddBreadcrumb(&sentry.Breadcrumb{
+		Category:  payment.CreditCardValidatedEvent,
+		Timestamp: time.Now().Unix(),
+		Level:     sentry.LevelInfo,
+		Data:      evt.Data.ToMap(),
+	})
 
+	// Create a new SQS EventEmitter and send the event
+	em := sqs.New()
 	err = em.Send(evt)
 	if err != nil {
-		sentry.CaptureException(fmt.Errorf("error sending CreditCardValidated event: %s", err.Error()))
-		return err
+		return handleError("sending event", err)
 	}
 
-	sentry.CaptureMessage(fmt.Sprintf("validation successful for order [%s]", req.Request.OrderID))
+	sentry.CaptureMessage(fmt.Sprintf("validation successful for order %s", req.Data.OrderID))
 
 	return nil
+}
+
+// handleError takes the activity where the error occured and the error object and sends a message to sentry.
+// The original error is returned so it can be thrown.
+func handleError(activity string, err error) error {
+	log.Printf("error %s: %s", activity, err.Error())
+	sentry.CaptureException(fmt.Errorf("error %s: %s", activity, err.Error()))
+	return err
 }
 
 // The main method is executed by AWS Lambda and points to the handler

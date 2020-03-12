@@ -3,17 +3,14 @@ module github.com/retgits/acme-serverless-payment
 go 1.13
 
 require (
-	github.com/aws/aws-lambda-go v1.13.2
-	github.com/aws/aws-sdk-go v1.26.5
+	github.com/aws/aws-lambda-go v1.15.0
+	github.com/aws/aws-sdk-go v1.29.19
 	github.com/getsentry/sentry-go v0.5.1
 	github.com/gofrs/uuid v3.2.0+incompatible
-	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/magefile/mage v1.9.0
-	github.com/mitchellh/mapstructure v1.1.2
-	github.com/pulumi/pulumi v1.8.1
-	github.com/pulumi/pulumi-aws v1.17.0
+	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
+	github.com/pulumi/pulumi v1.12.0
+	github.com/pulumi/pulumi-aws v1.24.0
 	github.com/retgits/creditcard v0.6.0
-	github.com/retgits/wavefront-lambda-go v0.1.1-0.20191125162950-829ba5810925
-	github.com/stretchr/testify v1.4.1-0.20191106224347-f1bd0923b832
-	gopkg.in/yaml.v2 v2.2.7
+	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
+	gopkg.in/yaml.v2 v2.2.8 // indirect
 )

@@ -52,3 +52,6 @@ bin/
 
 # Serverless Framework
 .serverless
+
+# Pulumi files
+Pulumi.*.yaml

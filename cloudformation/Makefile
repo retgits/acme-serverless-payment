@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # Description: Makefile
 # Author(s): retgits <https://github.com/retgits/>
-# Last updated: 2020-01-22
+# Last updated: 2020-03-09
 # 
 # This software may be modified and distributed under the terms of the
 # MIT license. See the LICENSE file for details.
@@ -26,8 +26,8 @@ version       	:= $(strip $(if $(shell git describe --tags --always --dirty="-de
 aws_bucket    	?= $$AWS_S3_BUCKET
 
 # Suppress checking files and all Make output
-.PHONY: help build vuln clean deploy destroy
-.SILENT: help build vuln clean deploy destroy
+.PHONY: help build clean deploy destroy
+.SILENT: help build clean deploy destroy
 
 # Targets
 help: ## Displays the help for each target (this message)
@@ -40,17 +40,7 @@ help: ## Displays the help for each target (this message)
 
 build: ## Build the executable for Lambda
 	echo
-ifeq ($(TYPE), eventbridge)
-	GOOS=linux GOARCH=amd64 go build -o ./bin/lambda-payment-eventbridge ../../cmd/lambda-payment-eventbridge
-endif
-ifeq ($(TYPE), sqs)
-	GOOS=linux GOARCH=amd64 go build -o ./bin/lambda-payment-sqs ../../cmd/lambda-payment-sqs
-endif
-	echo
-
-vuln: ## Scans the Go.mod file for known vulnerabilities using Snyk.
-	echo
-	snyk test --file=../../go.mod
+	GOOS=linux GOARCH=amd64 go build -o ./bin/lambda-payment-eventbridge ../cmd/lambda-payment-eventbridge
 	echo
 
 clean: ## Remove all generated files
@@ -61,7 +51,7 @@ clean: ## Remove all generated files
 
 deploy: ## Deploy the app to AWS Lambda
 	echo
-	aws cloudformation package --template-file lambda-$(TYPE)-template.yaml --output-template-file lambda-packaged.yaml --s3-bucket $(aws_bucket)
+	aws cloudformation package --template-file lambda-template.yaml --output-template-file lambda-packaged.yaml --s3-bucket $(aws_bucket)
 	aws cloudformation deploy \
 		--template-file lambda-packaged.yaml \
 		--stack-name $(project_name)-$(stage) \
