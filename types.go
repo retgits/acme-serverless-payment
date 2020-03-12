@@ -111,6 +111,14 @@ func (e *PaymentRequested) Marshal() ([]byte, error) {
 	return json.Marshal(e)
 }
 
+// UnmarshalCreditCardValidated parses the JSON-encoded data and stores the result in a
+// CreditCardValidated.
+func UnmarshalCreditCardValidated(data []byte) (CreditCardValidated, error) {
+	var r CreditCardValidated
+	err := json.Unmarshal(data, &r)
+	return r, err
+}
+
 // Marshal returns the JSON encoding of CreditCardValidated.
 func (e *CreditCardValidated) Marshal() ([]byte, error) {
 	return json.Marshal(e)
