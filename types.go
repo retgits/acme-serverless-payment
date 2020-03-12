@@ -106,6 +106,11 @@ func UnmarshalPaymentRequested(data []byte) (PaymentRequested, error) {
 	return r, err
 }
 
+// Marshal returns the JSON encoding of PaymentRequested.
+func (e *PaymentRequested) Marshal() ([]byte, error) {
+	return json.Marshal(e)
+}
+
 // Marshal returns the JSON encoding of CreditCardValidated.
 func (e *CreditCardValidated) Marshal() ([]byte, error) {
 	return json.Marshal(e)
