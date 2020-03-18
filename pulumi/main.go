@@ -56,7 +56,7 @@ func main() {
 		var tags Tags
 		conf.RequireObject("tags", &tags)
 
-		// Create a new DynamoConfig object with the data from the configuration
+		// Create a new GenericConfig object with the data from the configuration
 		var genericConfig GenericConfig
 		conf.RequireObject("generic", &genericConfig)
 		genericConfig.Region = region
