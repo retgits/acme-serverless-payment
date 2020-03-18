@@ -11,6 +11,7 @@ require (
 	github.com/pulumi/pulumi v1.12.0
 	github.com/pulumi/pulumi-aws v1.24.0
 	github.com/retgits/creditcard v0.6.0
+	github.com/retgits/pulumi-helpers v0.1.3
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/yaml.v2 v2.2.8 // indirect
 )
