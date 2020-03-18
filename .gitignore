@@ -55,3 +55,7 @@ bin/
 
 # Pulumi files
 Pulumi.*.yaml
+
+# Builds and executables
+*.zip,
+cmd/*/lambda-payment-*

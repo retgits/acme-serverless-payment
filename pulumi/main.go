@@ -7,6 +7,7 @@ import (
 
 	"github.com/pulumi/pulumi-aws/sdk/go/aws/iam"
 	"github.com/pulumi/pulumi-aws/sdk/go/aws/lambda"
+	"github.com/pulumi/pulumi-aws/sdk/go/aws/sqs"
 	"github.com/pulumi/pulumi/sdk/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/go/pulumi/config"
 	"github.com/retgits/pulumi-helpers/builder"
@@ -28,14 +29,8 @@ type Tags struct {
 	Version pulumi.String
 }
 
-// LambdaConfig contains the key-value pairs for the configuration of AWS Lambda in this stack
-type LambdaConfig struct {
-	// The SQS queue to send responses to
-	PaymentResponseQueue string `json:"responsequeue"`
-
-	// The SQS queue to receives messages from
-	PaymentRequestQueue string `json:"requestqueue"`
-
+// GenericConfig contains the key-value pairs for the configuration of AWS in this stack
+type GenericConfig struct {
 	// The AWS region used
 	Region string `json:"region"`
 
@@ -56,8 +51,8 @@ func main() {
 		conf.RequireObject("tags", &tags)
 
 		// Create a new DynamoConfig object with the data from the configuration
-		var lambdaConfig LambdaConfig
-		conf.RequireObject("lambda", &lambdaConfig)
+		var genericConfig GenericConfig
+		conf.RequireObject("generic", &genericConfig)
 
 		// Create a map[string]pulumi.Input of the tags
 		// the first four tags come from the configuration file
@@ -102,12 +97,27 @@ func main() {
 			return err
 		}
 
+		// Lookup the SQS queues
+		responseQueue, err := sqs.LookupQueue(ctx, &sqs.LookupQueueArgs{
+			Name: fmt.Sprintf("%s-acmeserverless-sqs-payment-response", ctx.Stack()),
+		})
+		if err != nil {
+			return err
+		}
+
+		requestQueue, err := sqs.LookupQueue(ctx, &sqs.LookupQueueArgs{
+			Name: fmt.Sprintf("%s-acmeserverless-sqs-payment-request", ctx.Stack()),
+		})
+		if err != nil {
+			return err
+		}
+
 		// Create a factory to get policies from
-		iamFactory := sampolicies.NewFactory().WithAccountID(lambdaConfig.AccountID).WithPartition("aws").WithRegion(lambdaConfig.Region)
+		iamFactory := sampolicies.NewFactory().WithAccountID(genericConfig.AccountID).WithPartition("aws").WithRegion(genericConfig.Region)
 
 		// Add a policy document to allow the function to use SQS as event source
-		iamFactory.AddSQSSendMessagePolicy(lambdaConfig.PaymentResponseQueue)
-		iamFactory.AddSQSPollerPolicy(lambdaConfig.PaymentRequestQueue)
+		iamFactory.AddSQSSendMessagePolicy(responseQueue.Arn)
+		iamFactory.AddSQSPollerPolicy(requestQueue.Arn)
 		policies, err := iamFactory.GetPolicyStatement()
 		if err != nil {
 			return err
@@ -124,12 +134,12 @@ func main() {
 
 		// Create the environment variables for the Lambda function
 		variables := make(map[string]pulumi.StringInput)
-		variables["REGION"] = pulumi.String(lambdaConfig.Region)
-		variables["SENTRY_DSN"] = pulumi.String(lambdaConfig.SentryDSN)
+		variables["REGION"] = pulumi.String(genericConfig.Region)
+		variables["SENTRY_DSN"] = pulumi.String(genericConfig.SentryDSN)
 		variables["FUNCTION_NAME"] = pulumi.String(fmt.Sprintf("%s-lambda-payment", ctx.Stack()))
 		variables["VERSION"] = tags.Version
 		variables["STAGE"] = pulumi.String(ctx.Stack())
-		variables["RESPONSEQUEUE"] = pulumi.String(lambdaConfig.PaymentResponseQueue)
+		variables["RESPONSEQUEUE"] = pulumi.String(responseQueue.Arn)
 
 		environment := lambda.FunctionEnvironmentArgs{
 			Variables: pulumi.StringMap(variables),
@@ -158,7 +168,7 @@ func main() {
 			BatchSize:      pulumi.Int(1),
 			Enabled:        pulumi.Bool(true),
 			FunctionName:   function.Arn,
-			EventSourceArn: pulumi.String(lambdaConfig.PaymentRequestQueue),
+			EventSourceArn: pulumi.String(requestQueue.Arn),
 		})
 		if err != nil {
 			return err

@@ -28,15 +28,14 @@ You'll need to create a [Pulumi.dev.yaml](./pulumi/Pulumi.dev.yaml) file that wi
 config:
   aws:region: us-west-2 ## The region you want to deploy to
   awsconfig:lambda:
-    responsequeue: ## The ARN of the Payment Response SQS queue (which you can create using the Pulumi deployment in the acme-serverless repo)
-    requestqueue: ## The ARN of the Payment Request SQS queue (which you can create using the Pulumi deployment in the acme-serverless repo)
     region: us-west-2 ## The region you want to deploy to
     sentrydsn: ## The DSN to connect to Sentry
+    accountid: ## Your AWS Account ID
   awsconfig:tags:
     author: retgits ## The author, you...
     feature: acmeserverless
     team: vcs ## The team you're on
-    version: 0.1.0 ## The version
+    version: 0.2.0 ## The version
 ```
 
 To create the Pulumi stack, and create the Payment service, run `pulumi up`.
