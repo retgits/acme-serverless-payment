@@ -27,8 +27,7 @@ You'll need to create a [Pulumi.dev.yaml](./pulumi/Pulumi.dev.yaml) file that wi
 ```yaml
 config:
   aws:region: us-west-2 ## The region you want to deploy to
-  awsconfig:lambda:
-    region: us-west-2 ## The region you want to deploy to
+  awsconfig:generic:
     sentrydsn: ## The DSN to connect to Sentry
     accountid: ## Your AWS Account ID
   awsconfig:tags:

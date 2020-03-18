@@ -32,7 +32,7 @@ type Tags struct {
 // GenericConfig contains the key-value pairs for the configuration of AWS in this stack
 type GenericConfig struct {
 	// The AWS region used
-	Region string `json:"region"`
+	Region string
 
 	// The DSN used to connect to Sentry
 	SentryDSN string `json:"sentrydsn"`
@@ -43,6 +43,12 @@ type GenericConfig struct {
 
 func main() {
 	pulumi.Run(func(ctx *pulumi.Context) error {
+		// Get the region
+		region, found := ctx.GetConfig("aws:region")
+		if !found {
+			return fmt.Errorf("region not found")
+		}
+
 		// Read the configuration data from Pulumi.<stack>.yaml
 		conf := config.New(ctx, "awsconfig")
 
@@ -53,6 +59,7 @@ func main() {
 		// Create a new DynamoConfig object with the data from the configuration
 		var genericConfig GenericConfig
 		conf.RequireObject("generic", &genericConfig)
+		genericConfig.Region = region
 
 		// Create a map[string]pulumi.Input of the tags
 		// the first four tags come from the configuration file

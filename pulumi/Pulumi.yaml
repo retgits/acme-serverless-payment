@@ -6,8 +6,6 @@ template:
       aws:region:
         description: The AWS region to deploy into
       awsconfig:generic:
-        region:
-          description: The AWS region to deploy into
         sentrydsn:
           description: The DSN to connect to Sentry
         accountid:
