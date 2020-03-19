@@ -11,5 +11,5 @@ jobs:
       - run:
           command: |
             echo Running test
-            ls -alh
+            ls -alh ~/project/pulumi
             pwd
