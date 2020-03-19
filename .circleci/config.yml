@@ -8,6 +8,8 @@ jobs:
     steps:
       - checkout
       - pulumi/login
-      - pulumi/update:
-          stack: acmeserverless-payment/dev
-          working_directory: ~/pulumi
+      - run:
+          command: |
+            echo Running test
+            ls -alh
+            pwd
