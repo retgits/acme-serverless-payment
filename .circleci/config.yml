@@ -7,7 +7,8 @@ jobs:
       - image: circleci/golang:1.13
     steps:
       - checkout
-      - pulumi/login
+      - pulumi/login:
+        version: 1.12.1
       - run:
           command: |
             echo Create Pulumi file
