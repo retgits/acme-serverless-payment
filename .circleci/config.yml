@@ -23,5 +23,7 @@ jobs:
             echo "    team: vcs" >> ~/project/pulumi/Pulumi.dev.yaml
             echo "    version: 0.2.0" >> ~/project/pulumi/Pulumi.dev.yaml
             pulumi plugin install resource aws 1.24.0
-            pulumi version
-            pulumi update --stack retgits/dev --cwd ~/project/pulumi --skip-preview
+      - pulumi/update:
+          stack: retgits/dev
+          working_directory: ~/project/pulumi
+          skip-preview: true
