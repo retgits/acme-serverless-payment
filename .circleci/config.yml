@@ -10,6 +10,17 @@ jobs:
       - pulumi/login
       - run:
           command: |
-            echo Running test
+            echo Create Pulumi file
+            echo "config:" >> ~/project/pulumi/Pulumi.dev.yaml
+            echo "  aws:region: us-west-2" >> ~/project/pulumi/Pulumi.dev.yaml
+            echo "  awsconfig:generic:" >> ~/project/pulumi/Pulumi.dev.yaml
+            echo "    accountid: \"$AWS_ACCOUNT_ID\"" >> ~/project/pulumi/Pulumi.dev.yaml
+            echo "    sentrydsn: $SENTRY_DSN" >> ~/project/pulumi/Pulumi.dev.yaml
+            echo "  awsconfig:tags:" >> ~/project/pulumi/Pulumi.dev.yaml
+            echo "    author: retgits" >> ~/project/pulumi/Pulumi.dev.yaml
+            echo "    feature: acmeserverless" >> ~/project/pulumi/Pulumi.dev.yaml
+            echo "    team: vcs" >> ~/project/pulumi/Pulumi.dev.yaml
+            echo "    version: 0.2.0" >> ~/project/pulumi/Pulumi.dev.yaml
             ls -alh ~/project/pulumi
             pwd
+            cat ~/project/pulumi/Pulumi.dev.yaml
