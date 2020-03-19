@@ -123,8 +123,8 @@ func main() {
 		iamFactory := sampolicies.NewFactory().WithAccountID(genericConfig.AccountID).WithPartition("aws").WithRegion(genericConfig.Region)
 
 		// Add a policy document to allow the function to use SQS as event source
-		iamFactory.AddSQSSendMessagePolicy(responseQueue.Arn)
-		iamFactory.AddSQSPollerPolicy(requestQueue.Arn)
+		iamFactory.AddSQSSendMessagePolicy(responseQueue.Name)
+		iamFactory.AddSQSPollerPolicy(requestQueue.Name)
 		policies, err := iamFactory.GetPolicyStatement()
 		if err != nil {
 			return err
