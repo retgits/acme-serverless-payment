@@ -21,6 +21,6 @@ jobs:
             echo "    feature: acmeserverless" >> ~/project/pulumi/Pulumi.dev.yaml
             echo "    team: vcs" >> ~/project/pulumi/Pulumi.dev.yaml
             echo "    version: 0.2.0" >> ~/project/pulumi/Pulumi.dev.yaml
-            ls -alh ~/project/pulumi
-            pwd
-            cat ~/project/pulumi/Pulumi.dev.yaml
+      - pulumi/update:
+          stack: retgits/dev
+          working_directory: ~/project/pulumi
