@@ -1,0 +1,13 @@
+version: 2.1
+orbs:
+  pulumi: pulumi/pulumi@1.2.0
+jobs:
+  build:
+    docker:
+      - image: cimg/go:1.13
+    steps:
+      - checkout
+      - pulumi/login
+      - pulumi/update:
+          stack: acmeserverless-payment/dev
+          working_directory: ~/pulumi
