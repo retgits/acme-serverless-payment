@@ -1,5 +1,5 @@
 # Payment
-
+ 
 > A payment service, because nothing in life is really free...
 
 The Payment service is part of the [ACME Fitness Serverless Shop](https://github.com/retgits/acme-serverless). The goal of this specific service is to validate credit card payments. Currently the only validation performed is whether the card is acceptable.
