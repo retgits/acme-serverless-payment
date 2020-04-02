@@ -39,6 +39,12 @@ type GenericConfig struct {
 
 	// The AWS AccountID to use
 	AccountID string `json:"accountid"`
+
+	// WavefrontURL is the URL of your Wavefront instance
+	WavefrontURL string `json:"wavefronturl"`
+
+	// WavefrontToken is your Wavefront API token
+	WavefrontToken string `json:"wavefronttoken"`
 }
 
 func main() {
@@ -147,6 +153,8 @@ func main() {
 		variables["VERSION"] = tags.Version
 		variables["STAGE"] = pulumi.String(ctx.Stack())
 		variables["RESPONSEQUEUE"] = pulumi.String(responseQueue.Arn)
+		variables["WAVEFRONT_URL"] = pulumi.String(genericConfig.WavefrontURL)
+		variables["WAVEFRONT_API_TOKEN"] = pulumi.String(genericConfig.WavefrontToken)
 
 		environment := lambda.FunctionEnvironmentArgs{
 			Variables: pulumi.StringMap(variables),
