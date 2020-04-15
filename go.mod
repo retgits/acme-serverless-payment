@@ -14,6 +14,7 @@ require (
 	github.com/pulumi/pulumi-aws v1.26.0 // indirect
 	github.com/retgits/acme-serverless v0.3.0
 	github.com/retgits/creditcard v0.6.0
+	github.com/retgits/gcr-wavefront v0.1.0
 	github.com/retgits/pulumi-helpers v0.1.3
 	github.com/wavefronthq/wavefront-lambda-go v0.0.0-20190812171804-d9475d6695cc
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect

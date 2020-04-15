@@ -81,6 +81,54 @@ make deploy
 
 To test, you can use the SQS or EventBridge test apps in the [acme-serverless](https://github.com/retgits/acme-serverless) repo.
 
+## Building for Google Cloud Run
+
+If you have Docker installed locally, you can use `docker build` to create a container which can be used to try out the payment service locally and for Google Cloud Run.
+
+To build your container image using Docker:
+
+Run the command:
+
+```bash
+VERSION=`git describe --tags --always --dirty="-dev"`
+docker build -f ./cmd/cloudrun-payment-http/Dockerfile . -t gcr.io/[PROJECT-ID]/payment:$VERSION
+```
+
+Replace `[PROJECT-ID]` with your Google Cloud project ID
+
+If you have not yet configured Docker to use the gcloud command-line tool to authenticate requests to Container Registry, do so now using the command:
+
+```bash
+gcloud auth configure-docker
+```
+
+You need to do this before you can push or pull images using Docker. You only need to do it once.
+
+Push the container image to Container Registry:
+
+```bash
+docker push gcr.io/[PROJECT-ID]/payment:$VERSION
+```
+
+The container relies on the environment variables:
+
+* SENTRY_DSN: The DSN to connect to Sentry
+* K_SERVICE: The name of the service (in Google Cloud Run this variable is automatically set)
+* VERSION: The version you're running
+* STAGE: The environment in which you're running
+* WAVEFRONT_URL: The URL to connect to Wavefront
+* WAVEFRONT_TOKEN: The token to connect to Wavefront
+
+A `docker run`, with all options, is:
+
+```bash
+docker run --rm -it -p 8080:8080 -e SENTRY_DSN=abcd -e K_SERVICE=Payment \
+  -e VERSION=$VERSION -e STAGE=dev -e WAVEFRONT_URL=https://my-url.wavefront.com \
+  -e WAVEFRONT_TOKEN=efgh gcr.io/[PROJECT-ID]/payment:$VERSION
+```
+
+Replace `[PROJECT-ID]` with your Google Cloud project ID
+
 ## Contributing
 
 [Pull requests](https://github.com/retgits/acme-serverless-payment/pulls) are welcome. For major changes, please open [an issue](https://github.com/retgits/acme-serverless-payment/issues) first to discuss what you would like to change.
