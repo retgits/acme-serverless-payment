@@ -7,7 +7,7 @@ package mock
 import (
 	"log"
 
-	payment "github.com/retgits/acme-serverless-payment"
+	acmeserverless "github.com/retgits/acme-serverless"
 	"github.com/retgits/acme-serverless-payment/internal/emitter"
 )
 
@@ -23,7 +23,7 @@ func New() emitter.EventEmitter {
 
 // Send logs the message to the log file of the service
 // and returns an error if anything goes wrong.
-func (r responder) Send(e payment.CreditCardValidated) error {
+func (r responder) Send(e acmeserverless.CreditCardValidatedEvent) error {
 	payload, err := e.Marshal()
 	if err != nil {
 		return err

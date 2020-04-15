@@ -16,7 +16,7 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/getsentry/sentry-go"
 	"github.com/gofrs/uuid"
-	payment "github.com/retgits/acme-serverless-payment"
+	acmeserverless "github.com/retgits/acme-serverless"
 	"github.com/retgits/acme-serverless-payment/internal/emitter/eventbridge"
 	"github.com/retgits/acme-serverless-payment/internal/validator"
 	wflambda "github.com/wavefronthq/wavefront-lambda-go"
@@ -37,31 +37,31 @@ func handler(request json.RawMessage) error {
 	})
 
 	// Unmarshal the PaymentRequested event to a struct
-	req, err := payment.UnmarshalPaymentRequested(request)
+	req, err := acmeserverless.UnmarshalPaymentRequestedEvent(request)
 	if err != nil {
 		return handleError("unmarshaling payment", err)
 	}
 
 	// Send a breadcrumb to Sentry with the validation request
 	sentry.AddBreadcrumb(&sentry.Breadcrumb{
-		Category:  payment.PaymentRequestedEvent,
+		Category:  acmeserverless.PaymentRequestedEventName,
 		Timestamp: time.Now().Unix(),
 		Level:     sentry.LevelInfo,
-		Data:      req.Data.ToMap(),
+		Data:      acmeserverless.ToSentryMap(req.Data),
 	})
 
 	// Generate the event to emit
-	evt := payment.CreditCardValidated{
-		Metadata: payment.Metadata{
-			Domain: payment.Domain,
+	evt := acmeserverless.CreditCardValidatedEvent{
+		Metadata: acmeserverless.Metadata{
+			Domain: acmeserverless.PaymentDomain,
 			Source: "ValidateCreditCard",
-			Type:   payment.CreditCardValidatedEvent,
-			Status: "success",
+			Type:   acmeserverless.CreditCardValidatedEventName,
+			Status: acmeserverless.DefaultSuccessStatus,
 		},
-		Data: payment.PaymentData{
+		Data: acmeserverless.CreditCardValidationDetails{
 			Success:       true,
 			Status:        http.StatusOK,
-			Message:       payment.DefaultSuccessMessage,
+			Message:       acmeserverless.DefaultSuccessStatus,
 			Amount:        req.Data.Total,
 			OrderID:       req.Data.OrderID,
 			TransactionID: uuid.Must(uuid.NewV4()).String(),
@@ -77,17 +77,17 @@ func handler(request json.RawMessage) error {
 		evt.Metadata.Status = "error"
 		evt.Data.Success = false
 		evt.Data.Status = http.StatusBadRequest
-		evt.Data.Message = payment.DefaultErrorMessage
+		evt.Data.Message = acmeserverless.DefaultErrorStatus
 		evt.Data.TransactionID = "-1"
 		handleError("validating creditcard", err)
 	}
 
 	// Send a breadcrumb to Sentry with the validation result
 	sentry.AddBreadcrumb(&sentry.Breadcrumb{
-		Category:  payment.CreditCardValidatedEvent,
+		Category:  acmeserverless.CreditCardValidatedEventName,
 		Timestamp: time.Now().Unix(),
 		Level:     sentry.LevelInfo,
-		Data:      evt.Data.ToMap(),
+		Data:      acmeserverless.ToSentryMap(evt.Data),
 	})
 
 	// Create a new EventBridgee EventEmitter and send the event
