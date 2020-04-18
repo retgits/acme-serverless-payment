@@ -45,7 +45,7 @@ func handler(request events.SQSEvent) error {
 	// Send a breadcrumb to Sentry with the validation request
 	sentry.AddBreadcrumb(&sentry.Breadcrumb{
 		Category:  acmeserverless.PaymentRequestedEventName,
-		Timestamp: time.Now().Unix(),
+		Timestamp: time.Now(),
 		Level:     sentry.LevelInfo,
 		Data:      acmeserverless.ToSentryMap(req.Data),
 	})
@@ -85,7 +85,7 @@ func handler(request events.SQSEvent) error {
 	// Send a breadcrumb to Sentry with the validation result
 	sentry.AddBreadcrumb(&sentry.Breadcrumb{
 		Category:  acmeserverless.CreditCardValidatedEventName,
-		Timestamp: time.Now().Unix(),
+		Timestamp: time.Now(),
 		Level:     sentry.LevelInfo,
 		Data:      acmeserverless.ToSentryMap(evt.Data),
 	})
