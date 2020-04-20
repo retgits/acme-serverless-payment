@@ -5,13 +5,13 @@ import (
 	"os"
 	"path"
 
-	"github.com/pulumi/pulumi-aws/sdk/go/aws/iam"
-	"github.com/pulumi/pulumi-aws/sdk/go/aws/lambda"
-	"github.com/pulumi/pulumi-aws/sdk/go/aws/sqs"
-	"github.com/pulumi/pulumi/sdk/go/pulumi"
-	"github.com/pulumi/pulumi/sdk/go/pulumi/config"
-	"github.com/retgits/pulumi-helpers/builder"
-	"github.com/retgits/pulumi-helpers/sampolicies"
+	"github.com/pulumi/pulumi-aws/sdk/v2/go/aws/iam"
+	"github.com/pulumi/pulumi-aws/sdk/v2/go/aws/lambda"
+	"github.com/pulumi/pulumi-aws/sdk/v2/go/aws/sqs"
+	"github.com/pulumi/pulumi/sdk/v2/go/pulumi"
+	"github.com/pulumi/pulumi/sdk/v2/go/pulumi/config"
+	"github.com/retgits/pulumi-helpers/v2/builder"
+	"github.com/retgits/pulumi-helpers/v2/sampolicies"
 )
 
 // Tags are key-value pairs to apply to the resources created by this stack
