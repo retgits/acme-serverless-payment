@@ -22,6 +22,9 @@ jobs:
       - image: circleci/node:12
     steps:
       - checkout
+      - run: 
+          name: Get GCP Key
+          command: echo ${GCLOUD_SERVICE_KEY} | base64 --decode --ignore-garbage > $HOME/gcloud-service-key.json
       - cloudrun/init
       - cloudrun/deploy:
           image: ariv3ra/acme-payments
