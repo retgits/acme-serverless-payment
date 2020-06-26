@@ -1,37 +1,37 @@
 version: 2.1
 orbs:
   pulumi: pulumi/pulumi@1.2.0
+  gcp-cloud-run: circleci/gcp-cloud-run@1.0.2  
 jobs:
-  build:
+  build_docker_image:
     docker:
-      - image: cimg/go:1.14
+      - image: circleci/node:12
     steps:
       - checkout
-      - pulumi/login:
-          version: 2.0.0
+      - setup_remote_docker:
+          docker_layer_caching: false
       - run:
+          name: Build Docker image
           command: |
-            echo Create Pulumi file
-            echo "config:" >> ~/project/pulumi/Pulumi.dev.yaml
-            echo "  aws:region: us-west-2" >> ~/project/pulumi/Pulumi.dev.yaml
-            echo "  awsconfig:generic:" >> ~/project/pulumi/Pulumi.dev.yaml
-            echo "    accountid: \"$AWS_ACCOUNT_ID\"" >> ~/project/pulumi/Pulumi.dev.yaml
-            echo "    sentrydsn: $SENTRY_DSN" >> ~/project/pulumi/Pulumi.dev.yaml
-            echo "    wavefronturl: $WAVEFRONT_URL" >> ~/project/pulumi/Pulumi.dev.yaml
-            echo "    wavefronttoken: $WAVEFRONT_TOKEN" >> ~/project/pulumi/Pulumi.dev.yaml
-            echo "  awsconfig:tags:" >> ~/project/pulumi/Pulumi.dev.yaml
-            echo "    author: retgits" >> ~/project/pulumi/Pulumi.dev.yaml
-            echo "    feature: acmeserverless" >> ~/project/pulumi/Pulumi.dev.yaml
-            echo "    team: vcs" >> ~/project/pulumi/Pulumi.dev.yaml
-            echo "    version: 0.2.0" >> ~/project/pulumi/Pulumi.dev.yaml
-            pulumi plugin install resource aws 2.0.0
-      - pulumi/update:
-          stack: retgits/dev
-          working_directory: ~/project/pulumi
-          skip-preview: true
+            export IMAGE_NAME="acme-payments"
+            docker build -t $DOCKER_LOGIN/$IMAGE_NAME --file cmd/cloudrun-payment-http/Dockerfile .
+            echo $DOCKER_PWD | docker login -u $DOCKER_LOGIN --password-stdin
+            docker push $DOCKER_LOGIN/$IMAGE_NAME  
+  build_and_deploy:
+    docker:
+      - image: circleci/node:12
+    steps:
+      - checkout
+      - cloudrun/init
+      - cloudrun/deploy:
+          image: ariv3ra/acme-payments
+          platform: managed
+          region: us-east1
+          service-name: acme-payments
+          unauthenticated: true
 workflows:
-  version: 2
-  deploy:
+  build_deploy:
     jobs:
-      - build:
-          context: ACMEServerless
+      - build_docker_image
+
+      
