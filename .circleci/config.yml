@@ -16,7 +16,7 @@ jobs:
             export IMAGE_NAME="acme-payments"
             docker build -t $DOCKER_LOGIN/$IMAGE_NAME --file cmd/cloudrun-payment-http/Dockerfile .
             echo $DOCKER_PWD | docker login -u $DOCKER_LOGIN --password-stdin
-            docker push $DOCKER_LOGIN/$IMAGE_NAME  
+            docker push $DOCKER_LOGIN/$IMAGE_NAME
   build_and_deploy:
     docker:
       - image: circleci/node:12
@@ -33,6 +33,6 @@ workflows:
   build_deploy:
     jobs:
       - build_docker_image
-      - build_and_deploy
-          # - requires:
-          #     - build_docker_image   
+      - build_and_deploy:
+          requires:
+            - build_docker_image   
