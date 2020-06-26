@@ -24,8 +24,11 @@ jobs:
       - checkout
       - run: 
           name: Get GCP Key
-          command: echo ${GCLOUD_SERVICE_KEY} | base64 --decode --ignore-garbage > $HOME/gcloud-service-key.json
+          command: |
+            echo ${GCLOUD_SERVICE_KEY} | base64 --decode --ignore-garbage > $HOME/gcloud-service-key.json
+            echo 'export GCLOUD_SERVICE_KEY=$(cat $HOME/gcloud-service-key.json)' >> $BASH_ENV
       - cloudrun/init
+
       - cloudrun/deploy:
           image: ariv3ra/acme-payments
           platform: managed
