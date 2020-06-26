@@ -33,5 +33,6 @@ workflows:
   build_deploy:
     jobs:
       - build_docker_image
-
-      
+      - build_and_deploy:
+          - requires:
+              - build_docker_image   
