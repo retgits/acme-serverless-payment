@@ -16,6 +16,6 @@ require (
 	github.com/retgits/creditcard v0.6.0
 	github.com/retgits/gcr-wavefront v0.3.0
 	github.com/retgits/pulumi-helpers/v2 v2.0.0
-	github.com/valyala/fasthttp v1.10.0
+	github.com/valyala/fasthttp v1.34.0
 	github.com/wavefronthq/wavefront-lambda-go v0.0.0-20190812171804-d9475d6695cc
 )
