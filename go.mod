@@ -6,7 +6,7 @@ go 1.14
 
 require (
 	github.com/aws/aws-lambda-go v1.16.0
-	github.com/aws/aws-sdk-go v1.30.7
+	github.com/aws/aws-sdk-go v1.33.0
 	github.com/fasthttp/router v1.0.2
 	github.com/getsentry/sentry-go v0.6.0
 	github.com/gofrs/uuid v3.2.0+incompatible
